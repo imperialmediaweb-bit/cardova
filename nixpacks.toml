@@ -1,0 +1,4 @@
+[variables]
+# Placeholder DATABASE_URL for Prisma's postinstall schema validation during build.
+# Railway injects the real DATABASE_URL at runtime via its PostgreSQL plugin.
+DATABASE_URL = "postgresql://placeholder:placeholder@localhost:5432/placeholder"
