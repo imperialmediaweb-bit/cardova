@@ -17,9 +17,11 @@ import { publicRouter } from './modules/public/public.router';
 const app = express();
 
 // Security
-app.use(helmet());
+app.use(helmet({
+  contentSecurityPolicy: env.NODE_ENV === 'production' ? false : undefined,
+}));
 app.use(cors({
-  origin: env.CLIENT_URL,
+  origin: env.NODE_ENV === 'production' ? true : env.CLIENT_URL,
   credentials: true,
 }));
 
@@ -58,6 +60,18 @@ app.use('/api/ai', aiRouter);
 app.use('/api/stripe', stripeRouter);
 app.use('/api/analytics', analyticsRouter);
 app.use('/api/public', publicRouter);
+
+// Serve frontend static files in production
+if (env.NODE_ENV === 'production') {
+  const webDist = path.resolve(__dirname, '../../web/dist');
+  app.use(express.static(webDist));
+
+  // SPA fallback: any non-API route serves index.html
+  app.get('*', (_req, res, next) => {
+    if (_req.path.startsWith('/api')) return next();
+    res.sendFile(path.join(webDist, 'index.html'));
+  });
+}
 
 // Error handler (must be last)
 app.use(errorHandler);
