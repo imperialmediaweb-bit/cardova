@@ -7,10 +7,12 @@ const generateBioSchema = z.object({
   company: z.string().min(1, 'Company is required').max(100),
   keywords: z.array(z.string().max(50)).min(1, 'At least one keyword required').max(5),
   tone: z.enum(['professional', 'friendly', 'creative']).optional().default('professional'),
+  provider: z.enum(['openai', 'claude', 'gemini']).optional().default('openai'),
 });
 
 const improveBioSchema = z.object({
   bio: z.string().min(1, 'Bio is required').max(1000),
+  provider: z.enum(['openai', 'claude', 'gemini']).optional().default('openai'),
 });
 
 export class AIController {
@@ -22,13 +24,19 @@ export class AIController {
       data.company,
       data.keywords,
       data.tone,
+      data.provider,
     );
     res.json({ success: true, data: result });
   }
 
   static async improveBio(req: Request, res: Response) {
     const data = improveBioSchema.parse(req.body);
-    const result = await AIService.improveBio(req.user!.userId, data.bio);
+    const result = await AIService.improveBio(req.user!.userId, data.bio, data.provider);
     res.json({ success: true, data: result });
+  }
+
+  static async getProviders(_req: Request, res: Response) {
+    const providers = AIService.getProviders();
+    res.json({ success: true, data: { providers } });
   }
 }

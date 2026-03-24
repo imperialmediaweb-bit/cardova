@@ -1,9 +1,9 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Sparkles, FileText, Wand2 } from 'lucide-react';
 import Modal from '../ui/Modal';
 import Input from '../ui/Input';
 import Button from '../ui/Button';
-import { aiApi } from '../../api/ai';
+import { aiApi, AIProvider } from '../../api/ai';
 import { bioTemplates, fillTemplate, getPlaceholderLabel, getPlaceholderExample } from '../../data/bioTemplates';
 import toast from 'react-hot-toast';
 
@@ -17,6 +17,12 @@ interface AIBioModalProps {
 
 type Tab = 'templates' | 'ai';
 type Tone = 'professional' | 'friendly' | 'creative';
+
+const providerLabels: Record<AIProvider, { name: string; color: string }> = {
+  openai: { name: 'GPT-4o', color: 'text-green-400 border-green-500 bg-green-500/10' },
+  claude: { name: 'Claude', color: 'text-orange-400 border-orange-500 bg-orange-500/10' },
+  gemini: { name: 'Gemini', color: 'text-blue-400 border-blue-500 bg-blue-500/10' },
+};
 
 export default function AIBioModal({
   isOpen,
@@ -37,8 +43,22 @@ export default function AIBioModal({
   const [company, setCompany] = useState(defaultCompany);
   const [keywordsInput, setKeywordsInput] = useState('');
   const [tone, setTone] = useState<Tone>('professional');
+  const [provider, setProvider] = useState<AIProvider>('openai');
+  const [availableProviders, setAvailableProviders] = useState<AIProvider[]>(['openai']);
   const [generatedBio, setGeneratedBio] = useState('');
   const [loading, setLoading] = useState(false);
+
+  // Fetch available providers on mount
+  useEffect(() => {
+    if (isOpen) {
+      aiApi.getProviders().then((res) => {
+        setAvailableProviders(res.data.data.providers);
+      }).catch(() => {
+        // Fallback to openai only
+        setAvailableProviders(['openai']);
+      });
+    }
+  }, [isOpen]);
 
   const selectedTemplateData = bioTemplates.find((t) => t.id === selectedTemplate);
 
@@ -46,7 +66,6 @@ export default function AIBioModal({
     const tmpl = bioTemplates.find((t) => t.id === id);
     if (!tmpl) return;
     setSelectedTemplate(id);
-    // Pre-fill with card data where possible
     const initial: Record<string, string> = {};
     for (const p of tmpl.placeholders) {
       if (p === 'company' && defaultCompany) initial[p] = defaultCompany;
@@ -66,7 +85,6 @@ export default function AIBioModal({
   };
 
   const handleUseTemplate = () => {
-    // Check all placeholders are filled
     if (selectedTemplateData) {
       const empty = selectedTemplateData.placeholders.filter((p) => !placeholderValues[p]?.trim());
       if (empty.length > 0) {
@@ -87,7 +105,7 @@ export default function AIBioModal({
 
     setLoading(true);
     try {
-      const res = await aiApi.generateBio({ jobTitle, company, keywords, tone });
+      const res = await aiApi.generateBio({ jobTitle, company, keywords, tone, provider });
       setGeneratedBio(res.data.data.bio);
     } catch (err: any) {
       toast.error(err.response?.data?.message || 'Failed to generate bio');
@@ -204,6 +222,31 @@ export default function AIBioModal({
         {/* AI Generate Tab */}
         {tab === 'ai' && (
           <div className="space-y-4">
+            {/* Provider Selector */}
+            {availableProviders.length > 1 && (
+              <div className="space-y-1.5">
+                <label className="block text-sm font-medium text-zinc-300">AI Model</label>
+                <div className="flex gap-2">
+                  {availableProviders.map((p) => {
+                    const info = providerLabels[p];
+                    return (
+                      <button
+                        key={p}
+                        onClick={() => setProvider(p)}
+                        className={`flex-1 px-3 py-2 rounded-lg border text-center text-xs font-semibold transition-all ${
+                          provider === p
+                            ? info.color + ' ring-1 ring-current/20'
+                            : 'border-zinc-700 text-zinc-400 hover:border-zinc-600'
+                        }`}
+                      >
+                        {info.name}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
             <Input
               label="Job Title"
               value={jobTitle}
@@ -274,7 +317,7 @@ export default function AIBioModal({
                   className="w-full"
                 >
                   <Sparkles className="w-4 h-4 mr-2" />
-                  Generate Bio
+                  Generate with {providerLabels[provider].name}
                 </Button>
               )}
             </div>

@@ -11,6 +11,8 @@
     "db:push": "prisma db push"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.80.0",
+    "@google/generative-ai": "^0.24.1",
     "@prisma/client": "^5.14.0",
     "@types/cookie-parser": "^1.4.10",
     "bcryptjs": "^2.4.3",

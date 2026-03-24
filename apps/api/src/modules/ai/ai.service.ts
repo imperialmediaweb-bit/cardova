@@ -1,4 +1,4 @@
-import { openai } from '../../config/openai';
+import { generateWithLLM, getAvailableProviders, LLMProvider } from '../../config/llm';
 import { prisma } from '../../config/prisma';
 import { AppError } from '../../middleware/errorHandler';
 
@@ -17,6 +17,7 @@ export class AIService {
     company: string,
     keywords: string[],
     tone: string = 'professional',
+    provider: LLMProvider = 'openai',
   ) {
     const user = await prisma.user.findUnique({ where: { id: userId } });
     if (!user) throw new AppError('User not found', 404);
@@ -28,8 +29,7 @@ export class AIService {
       );
     }
 
-    const completion = await openai.chat.completions.create({
-      model: 'gpt-4o',
+    const bio = await generateWithLLM(provider, {
       messages: [
         {
           role: 'system',
@@ -45,12 +45,9 @@ export class AIService {
           content: `Job title: ${jobTitle}. Company: ${company}. Keywords: ${keywords.join(', ')}.`,
         },
       ],
-      max_tokens: 200,
+      maxTokens: 200,
       temperature: tone === 'creative' ? 0.9 : tone === 'friendly' ? 0.8 : 0.7,
     });
-
-    const bio = completion.choices[0]?.message?.content?.trim();
-    if (!bio) throw new AppError('Failed to generate bio. Please try again.', 500);
 
     const updatedUser = await prisma.user.update({
       where: { id: userId },
@@ -61,10 +58,11 @@ export class AIService {
       bio,
       creditsUsed: updatedUser.aiCreditsUsed,
       creditsTotal: user.isPro ? null : FREE_AI_CREDITS,
+      provider,
     };
   }
 
-  static async improveBio(userId: string, currentBio: string) {
+  static async improveBio(userId: string, currentBio: string, provider: LLMProvider = 'openai') {
     const user = await prisma.user.findUnique({ where: { id: userId } });
     if (!user) throw new AppError('User not found', 404);
 
@@ -72,8 +70,7 @@ export class AIService {
       throw new AppError('Upgrade to Pro to use AI bio improvement.', 403);
     }
 
-    const completion = await openai.chat.completions.create({
-      model: 'gpt-4o',
+    const bio = await generateWithLLM(provider, {
       messages: [
         {
           role: 'system',
@@ -84,13 +81,14 @@ export class AIService {
           content: `Improve this bio: "${currentBio}"`,
         },
       ],
-      max_tokens: 200,
+      maxTokens: 200,
       temperature: 0.7,
     });
 
-    const bio = completion.choices[0]?.message?.content?.trim();
-    if (!bio) throw new AppError('Failed to improve bio. Please try again.', 500);
+    return { bio, provider };
+  }
 
-    return { bio };
+  static getProviders() {
+    return getAvailableProviders();
   }
 }

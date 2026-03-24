@@ -17,6 +17,7 @@ const aiRateLimit = rateLimit({
 const router = Router();
 
 router.use(asyncHandler(authMiddleware));
+router.get('/providers', asyncHandler(AIController.getProviders));
 router.post('/generate-bio', aiRateLimit, asyncHandler(AIController.generateBio));
 router.post('/improve-bio', aiRateLimit, proMiddleware, asyncHandler(AIController.improveBio));
 
