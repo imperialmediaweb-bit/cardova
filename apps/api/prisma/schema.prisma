@@ -1,0 +1,73 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id               String    @id @default(cuid())
+  email            String    @unique
+  password         String
+  name             String
+  emailVerified    Boolean   @default(false)
+  verifyToken      String?
+  resetToken       String?
+  resetTokenExpiry DateTime?
+  isPro            Boolean   @default(false)
+  aiCreditsUsed    Int       @default(0)
+  stripeCustomerId String?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+  card             Card?
+  payments         Payment[]
+  refreshTokens    RefreshToken[]
+}
+
+model RefreshToken {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+}
+
+model Card {
+  id          String   @id @default(cuid())
+  userId      String   @unique
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  username    String   @unique
+  displayName String
+  title       String   @default("")
+  company     String   @default("")
+  location    String   @default("")
+  bio         String   @default("")
+  avatarUrl   String?
+  theme       String   @default("minimal")
+  isPublished Boolean  @default(true)
+  socialLinks Json     @default("{}")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  views       CardView[]
+}
+
+model CardView {
+  id       String   @id @default(cuid())
+  cardId   String
+  card     Card     @relation(fields: [cardId], references: [id], onDelete: Cascade)
+  referrer String   @default("")
+  viewedAt DateTime @default(now())
+}
+
+model Payment {
+  id              String   @id @default(cuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id])
+  stripeSessionId String   @unique
+  amount          Int
+  type            String
+  createdAt       DateTime @default(now())
+}
