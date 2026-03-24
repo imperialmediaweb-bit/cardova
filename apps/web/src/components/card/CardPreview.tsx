@@ -7,7 +7,7 @@ interface CardPreviewProps {
   location?: string;
   bio?: string;
   avatarUrl?: string | null;
-  theme: 'minimal' | 'bold' | 'glass';
+  theme: 'minimal' | 'bold' | 'glass' | 'neon' | 'sunset' | 'ocean';
   socialLinks?: {
     twitter?: string;
     linkedin?: string;
@@ -61,7 +61,7 @@ export default function CardPreview({
     return `https://${value}`;
   };
 
-  const themeStyles = {
+  const themeStyles: Record<string, { card: string; name: string; subtitle: string; bio: string; iconBg: string; badge: string; border: string }> = {
     minimal: {
       card: 'bg-white text-zinc-900 shadow-xl',
       name: 'text-zinc-900',
@@ -89,12 +89,46 @@ export default function CardPreview({
       badge: 'text-white/30',
       border: '',
     },
+    neon: {
+      card: 'bg-zinc-950 text-white border border-green-400/30 shadow-lg shadow-green-400/10',
+      name: 'text-green-300',
+      subtitle: 'text-cyan-400/80',
+      bio: 'text-zinc-300',
+      iconBg: 'bg-green-400/10 hover:bg-green-400/20 text-green-300',
+      badge: 'text-green-400/30',
+      border: '',
+    },
+    sunset: {
+      card: 'bg-white/10 backdrop-blur-2xl text-white border border-white/20',
+      name: 'text-white',
+      subtitle: 'text-orange-100/80',
+      bio: 'text-white/80',
+      iconBg: 'bg-white/10 hover:bg-white/20 text-white/90',
+      badge: 'text-white/30',
+      border: '',
+    },
+    ocean: {
+      card: 'bg-white/10 backdrop-blur-2xl text-white border border-white/20',
+      name: 'text-white',
+      subtitle: 'text-cyan-100/80',
+      bio: 'text-white/80',
+      iconBg: 'bg-white/10 hover:bg-white/20 text-white/90',
+      badge: 'text-white/30',
+      border: '',
+    },
   };
 
-  const t = themeStyles[theme];
+  const t = themeStyles[theme] || themeStyles.minimal;
+
+  const wrapperGradients: Record<string, string> = {
+    glass: 'bg-gradient-to-br from-brand-600 via-purple-600 to-pink-600',
+    sunset: 'bg-gradient-to-br from-orange-500 via-rose-500 to-pink-600',
+    ocean: 'bg-gradient-to-br from-blue-600 via-cyan-600 to-teal-500',
+  };
+  const wrapperClass = wrapperGradients[theme];
 
   return (
-    <div className={theme === 'glass' ? 'p-6 rounded-3xl bg-gradient-to-br from-brand-600 via-purple-600 to-pink-600' : ''}>
+    <div className={wrapperClass ? `p-6 rounded-3xl ${wrapperClass}` : ''}>
       <div className={`rounded-2xl p-8 max-w-sm mx-auto ${t.card}`}>
         {/* Avatar */}
         <div className="flex flex-col items-center text-center">

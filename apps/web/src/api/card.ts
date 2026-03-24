@@ -10,7 +10,7 @@ export interface CardData {
   location: string;
   bio: string;
   avatarUrl: string | null;
-  theme: 'minimal' | 'bold' | 'glass';
+  theme: 'minimal' | 'bold' | 'glass' | 'neon' | 'sunset' | 'ocean';
   isPublished: boolean;
   socialLinks: {
     twitter?: string;

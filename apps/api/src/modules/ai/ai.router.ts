@@ -3,6 +3,7 @@ import rateLimit from 'express-rate-limit';
 import { AIController } from './ai.controller';
 import { asyncHandler } from '../../middleware/asyncHandler';
 import { authMiddleware } from '../../middleware/auth';
+import { proMiddleware } from '../../middleware/pro';
 
 const aiRateLimit = rateLimit({
   windowMs: 60 * 1000,
@@ -17,5 +18,6 @@ const router = Router();
 
 router.use(asyncHandler(authMiddleware));
 router.post('/generate-bio', aiRateLimit, asyncHandler(AIController.generateBio));
+router.post('/improve-bio', aiRateLimit, proMiddleware, asyncHandler(AIController.improveBio));
 
 export { router as aiRouter };

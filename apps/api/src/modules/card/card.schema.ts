@@ -14,7 +14,7 @@ export const updateCardSchema = z.object({
   company: z.string().max(100).optional(),
   location: z.string().max(100).optional(),
   bio: z.string().max(500).optional(),
-  theme: z.enum(['minimal', 'bold', 'glass']).optional(),
+  theme: z.enum(['minimal', 'bold', 'glass', 'neon', 'sunset', 'ocean']).optional(),
   isPublished: z.boolean().optional(),
   socialLinks: z.object({
     twitter: z.string().optional(),

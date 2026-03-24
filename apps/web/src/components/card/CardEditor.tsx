@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Save, Sparkles, QrCode, Download } from 'lucide-react';
+import { Save, Sparkles, QrCode, Download, Wand2 } from 'lucide-react';
 import Input from '../ui/Input';
 import Button from '../ui/Button';
 import ThemePicker from './ThemePicker';
@@ -7,6 +7,8 @@ import SocialLinksEditor from './SocialLinksEditor';
 import AvatarUpload from './AvatarUpload';
 import AIBioModal from './AIBioModal';
 import { CardData, cardApi } from '../../api/card';
+import { aiApi } from '../../api/ai';
+import { useAuthStore } from '../../stores/authStore';
 import toast from 'react-hot-toast';
 
 interface CardEditorProps {
@@ -15,7 +17,9 @@ interface CardEditorProps {
 }
 
 export default function CardEditor({ card, onChange }: CardEditorProps) {
+  const { user } = useAuthStore();
   const [saving, setSaving] = useState(false);
+  const [improving, setImproving] = useState(false);
   const [showAIModal, setShowAIModal] = useState(false);
   const [form, setForm] = useState(card);
 
@@ -63,6 +67,27 @@ export default function CardEditor({ card, onChange }: CardEditorProps) {
       URL.revokeObjectURL(url);
     } catch {
       toast.error('Failed to download QR code');
+    }
+  };
+
+  const handleImproveBio = async () => {
+    if (!user?.isPro) {
+      toast('Upgrade to Pro for AI bio improvement', { icon: '👑' });
+      return;
+    }
+    if (!form.bio?.trim()) {
+      toast.error('Write a bio first, then improve it with AI');
+      return;
+    }
+    setImproving(true);
+    try {
+      const res = await aiApi.improveBio({ bio: form.bio });
+      updateField('bio', res.data.data.bio);
+      toast.success('Bio improved!');
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || 'Failed to improve bio');
+    } finally {
+      setImproving(false);
     }
   };
 
@@ -123,14 +148,28 @@ export default function CardEditor({ card, onChange }: CardEditorProps) {
       <div className="space-y-1.5">
         <div className="flex items-center justify-between">
           <label className="block text-sm font-medium text-zinc-300">Bio</label>
-          <button
-            type="button"
-            onClick={() => setShowAIModal(true)}
-            className="flex items-center gap-1.5 text-xs text-brand-400 hover:text-brand-300 font-medium"
-          >
-            <Sparkles className="w-3 h-3" />
-            Generate with AI
-          </button>
+          <div className="flex items-center gap-3">
+            {form.bio?.trim() && (
+              <button
+                type="button"
+                onClick={handleImproveBio}
+                disabled={improving}
+                className="flex items-center gap-1.5 text-xs text-purple-400 hover:text-purple-300 font-medium disabled:opacity-50"
+              >
+                <Wand2 className={`w-3 h-3 ${improving ? 'animate-spin' : ''}`} />
+                {improving ? 'Improving...' : 'Improve with AI'}
+                {!user?.isPro && <span className="text-[10px] text-zinc-500 ml-0.5">Pro</span>}
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={() => setShowAIModal(true)}
+              className="flex items-center gap-1.5 text-xs text-brand-400 hover:text-brand-300 font-medium"
+            >
+              <Sparkles className="w-3 h-3" />
+              Generate Bio
+            </button>
+          </div>
         </div>
         <textarea
           value={form.bio}

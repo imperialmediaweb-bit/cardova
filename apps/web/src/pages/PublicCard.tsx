@@ -117,7 +117,7 @@ export default function PublicCard() {
     (s) => card.socialLinks?.[s.key as keyof typeof card.socialLinks],
   );
 
-  const themeStyles = {
+  const themeStyles: Record<string, { bg: string; card: string; name: string; subtitle: string; bio: string; iconBg: string; contactBtn: string; badge: string; actionBtn: string }> = {
     minimal: {
       bg: 'bg-zinc-50 min-h-screen',
       card: 'bg-white shadow-2xl shadow-zinc-200/50',
@@ -151,9 +151,42 @@ export default function PublicCard() {
       badge: 'text-white/30',
       actionBtn: 'text-white/50 hover:text-white/80 bg-white/10 hover:bg-white/20',
     },
+    neon: {
+      bg: 'bg-zinc-950 min-h-screen',
+      card: 'bg-zinc-950 border border-green-400/30 shadow-lg shadow-green-400/10',
+      name: 'text-green-300',
+      subtitle: 'text-cyan-400/80',
+      bio: 'text-zinc-300',
+      iconBg: 'bg-green-400/10 hover:bg-green-400/20 text-green-300',
+      contactBtn: 'bg-green-500 hover:bg-green-600 text-white',
+      badge: 'text-green-400/30',
+      actionBtn: 'text-green-400/50 hover:text-green-300 bg-green-400/10 hover:bg-green-400/20',
+    },
+    sunset: {
+      bg: 'min-h-screen bg-gradient-to-br from-orange-500 via-rose-500 to-pink-600',
+      card: 'bg-white/10 backdrop-blur-2xl border border-white/20',
+      name: 'text-white',
+      subtitle: 'text-orange-100/80',
+      bio: 'text-white/80',
+      iconBg: 'bg-white/10 hover:bg-white/20 text-white/90',
+      contactBtn: 'bg-white hover:bg-white/90 text-zinc-900',
+      badge: 'text-white/30',
+      actionBtn: 'text-white/50 hover:text-white/80 bg-white/10 hover:bg-white/20',
+    },
+    ocean: {
+      bg: 'min-h-screen bg-gradient-to-br from-blue-600 via-cyan-600 to-teal-500',
+      card: 'bg-white/10 backdrop-blur-2xl border border-white/20',
+      name: 'text-white',
+      subtitle: 'text-cyan-100/80',
+      bio: 'text-white/80',
+      iconBg: 'bg-white/10 hover:bg-white/20 text-white/90',
+      contactBtn: 'bg-white hover:bg-white/90 text-zinc-900',
+      badge: 'text-white/30',
+      actionBtn: 'text-white/50 hover:text-white/80 bg-white/10 hover:bg-white/20',
+    },
   };
 
-  const t = themeStyles[card.theme];
+  const t = themeStyles[card.theme] || themeStyles.minimal;
 
   return (
     <>

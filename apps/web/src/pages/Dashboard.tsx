@@ -10,7 +10,6 @@ import ViewsChart from '../components/analytics/ViewsChart';
 import StatsCards from '../components/analytics/StatsCards';
 import Button from '../components/ui/Button';
 import Spinner from '../components/ui/Spinner';
-import Badge from '../components/ui/Badge';
 import { cardApi, CardData } from '../api/card';
 import { analyticsApi } from '../api/analytics';
 import { stripeApi } from '../api/stripe';
@@ -32,7 +31,7 @@ export default function Dashboard() {
   const { data: analyticsData, isLoading: analyticsLoading } = useQuery({
     queryKey: ['analytics'],
     queryFn: () => analyticsApi.getViews().then((res) => res.data.data),
-    enabled: user?.isPro === true && activeTab === 'analytics',
+    enabled: activeTab === 'analytics',
   });
 
   useEffect(() => {
@@ -129,20 +128,13 @@ export default function Dashboard() {
             Editor
           </button>
           <button
-            onClick={() => {
-              if (!user?.isPro) {
-                toast('Analytics requires Pro plan', { icon: '👑' });
-                return;
-              }
-              setActiveTab('analytics');
-            }}
+            onClick={() => setActiveTab('analytics')}
             className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors ${
               activeTab === 'analytics' ? 'bg-zinc-800 text-zinc-100' : 'text-zinc-400 hover:text-zinc-300'
             }`}
           >
             <BarChart3 className="w-4 h-4" />
             Analytics
-            {!user?.isPro && <Badge variant="pro">Pro</Badge>}
           </button>
         </div>
 
@@ -176,7 +168,7 @@ export default function Dashboard() {
           </div>
         )}
 
-        {activeTab === 'analytics' && user?.isPro && (
+        {activeTab === 'analytics' && (
           <div className="space-y-6">
             {analyticsLoading ? (
               <Spinner size="lg" className="py-20" />

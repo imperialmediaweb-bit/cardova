@@ -75,11 +75,11 @@ const testimonials = [
 const faqs = [
   {
     question: 'Is Cardova really free?',
-    answer: 'Yes. You get a fully functional digital card with a custom username, social links, QR code, and 3 AI bio generations — completely free, forever.',
+    answer: 'Yes. You get a fully functional digital card with custom username, social links, QR code, analytics, bio templates, and 10 AI bio generations — completely free, forever.',
   },
   {
     question: 'What do I get with Pro?',
-    answer: 'Pro unlocks unlimited AI bio generations, detailed view analytics (who viewed your card, top referrers, daily charts), and removes the "Powered by Cardova" badge from your card.',
+    answer: 'Pro unlocks unlimited AI bio generations, AI bio improvement, 6 premium themes (including Neon, Sunset, Ocean), and removes the "Powered by Cardova" badge from your card.',
   },
   {
     question: 'Can I use my own domain?',
@@ -87,7 +87,7 @@ const faqs = [
   },
   {
     question: 'How does the AI bio generator work?',
-    answer: 'You enter your job title, company, and a few keywords that describe you. Our AI (powered by GPT-4o) writes a 2-3 sentence professional bio. Free users get 3 generations; Pro users get unlimited.',
+    answer: 'You can pick from 10 ready-made bio templates for free, or use our AI (powered by GPT-4o) to generate a custom bio. Choose a tone (professional, friendly, or creative), enter your details, and get a polished bio in seconds. Free users get 10 AI generations; Pro users get unlimited plus AI bio improvement.',
   },
   {
     question: 'Can I cancel Pro anytime?',
@@ -99,17 +99,18 @@ const pricingFeatures = {
   free: [
     '1 digital card',
     'Custom username',
-    'All 3 themes',
+    '3 themes',
     'Social links & contact button',
-    'QR code',
-    'vCard download',
-    '3 AI bio generations',
+    'QR code & vCard download',
+    '10 bio templates',
+    '10 AI bio generations',
+    'View analytics & charts',
   ],
   pro: [
     'Everything in Free',
+    '6 themes (+ Neon, Sunset, Ocean)',
     'Unlimited AI bio generations',
-    'View analytics & charts',
-    'Top referrer tracking',
+    'AI bio improvement',
     'No "Powered by Cardova" badge',
     'Priority support',
   ],
