@@ -18,7 +18,9 @@ interface LLMOptions {
 }
 
 // Initialize clients (only if API key is provided)
-const openaiClient = new OpenAI({ apiKey: env.OPENAI_API_KEY });
+const openaiClient = env.OPENAI_API_KEY
+  ? new OpenAI({ apiKey: env.OPENAI_API_KEY })
+  : null;
 const anthropicClient = env.ANTHROPIC_API_KEY
   ? new Anthropic({ apiKey: env.ANTHROPIC_API_KEY })
   : null;
@@ -27,6 +29,9 @@ const geminiClient = env.GEMINI_API_KEY
   : null;
 
 async function callOpenAI(options: LLMOptions): Promise<string> {
+  if (!openaiClient) {
+    throw new AppError('OpenAI is not configured. OPENAI_API_KEY is missing.', 503);
+  }
   const completion = await openaiClient.chat.completions.create({
     model: 'gpt-4o',
     messages: options.messages,
@@ -106,7 +111,8 @@ export async function generateWithLLM(
 }
 
 export function getAvailableProviders(): LLMProvider[] {
-  const providers: LLMProvider[] = ['openai']; // always available
+  const providers: LLMProvider[] = [];
+  if (openaiClient) providers.push('openai');
   if (anthropicClient) providers.push('claude');
   if (geminiClient) providers.push('gemini');
   return providers;

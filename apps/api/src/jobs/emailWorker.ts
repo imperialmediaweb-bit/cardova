@@ -2,6 +2,11 @@ import { emailQueue } from './emailQueue';
 import { sendVerificationEmail, sendPasswordResetEmail } from '../utils/email';
 
 export function startEmailWorker(): void {
+  if (!emailQueue) {
+    console.warn('⚠️  Email worker skipped — no Redis connection');
+    return;
+  }
+
   emailQueue.process(async (job) => {
     const { type, email, token } = job.data;
 

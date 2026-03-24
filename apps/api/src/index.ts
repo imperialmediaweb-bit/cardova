@@ -10,11 +10,13 @@ async function main() {
     await prisma.$connect();
     console.log('✅ Database connected');
 
-    // Test Redis connection
-    await redis.ping();
-    console.log('✅ Redis connected');
+    // Test Redis connection (if configured)
+    if (redis) {
+      await redis.ping();
+      console.log('✅ Redis connected');
+    }
 
-    // Start email worker
+    // Start email worker (if Redis available)
     startEmailWorker();
 
     // Start server
@@ -32,14 +34,14 @@ async function main() {
 process.on('SIGTERM', async () => {
   console.log('SIGTERM received, shutting down...');
   await prisma.$disconnect();
-  redis.disconnect();
+  redis?.disconnect();
   process.exit(0);
 });
 
 process.on('SIGINT', async () => {
   console.log('SIGINT received, shutting down...');
   await prisma.$disconnect();
-  redis.disconnect();
+  redis?.disconnect();
   process.exit(0);
 });
 

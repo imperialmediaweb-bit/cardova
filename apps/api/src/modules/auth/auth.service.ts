@@ -3,6 +3,7 @@ import crypto from 'crypto';
 import { prisma } from '../../config/prisma';
 import { signAccessToken, signRefreshToken } from '../../utils/jwt';
 import { emailQueue } from '../../jobs/emailQueue';
+import { sendVerificationEmail, sendPasswordResetEmail } from '../../utils/email';
 import { AppError } from '../../middleware/errorHandler';
 import { RegisterInput, LoginInput } from './auth.schema';
 
@@ -27,7 +28,12 @@ export class AuthService {
       },
     });
 
-    await emailQueue.add({ type: 'verify', email: user.email, token: verifyToken });
+    // Send email via queue if Redis available, otherwise send directly
+    if (emailQueue) {
+      await emailQueue.add({ type: 'verify', email: user.email, token: verifyToken });
+    } else {
+      await sendVerificationEmail(user.email, verifyToken);
+    }
 
     return { message: 'Account created. Check your email to verify.' };
   }
@@ -155,7 +161,12 @@ export class AuthService {
       data: { resetToken, resetTokenExpiry },
     });
 
-    await emailQueue.add({ type: 'reset', email: user.email, token: resetToken });
+    // Send email via queue if Redis available, otherwise send directly
+    if (emailQueue) {
+      await emailQueue.add({ type: 'reset', email: user.email, token: resetToken });
+    } else {
+      await sendPasswordResetEmail(user.email, resetToken);
+    }
 
     return { message: 'If that email exists, a reset link has been sent.' };
   }

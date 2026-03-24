@@ -6,6 +6,11 @@ import { AppError } from '../../middleware/errorHandler';
 
 export class StripeService {
   static async createCheckout(userId: string, plan: 'monthly' | 'lifetime') {
+    if (!stripe) throw new AppError('Stripe is not configured', 503);
+    if (!env.STRIPE_MONTHLY_PRICE_ID || !env.STRIPE_LIFETIME_PRICE_ID) {
+      throw new AppError('Stripe price IDs not configured', 503);
+    }
+
     const user = await prisma.user.findUnique({ where: { id: userId } });
     if (!user) throw new AppError('User not found', 404);
 
@@ -39,6 +44,9 @@ export class StripeService {
   }
 
   static async handleWebhook(payload: Buffer, signature: string) {
+    if (!stripe) throw new AppError('Stripe is not configured', 503);
+    if (!env.STRIPE_WEBHOOK_SECRET) throw new AppError('Stripe webhook secret not configured', 503);
+
     let event: Stripe.Event;
     try {
       event = stripe.webhooks.constructEvent(payload, signature, env.STRIPE_WEBHOOK_SECRET);

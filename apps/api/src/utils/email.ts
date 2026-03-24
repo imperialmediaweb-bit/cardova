@@ -1,24 +1,38 @@
 import nodemailer from 'nodemailer';
 import { env } from '../config/env';
 
-const transporter = nodemailer.createTransport({
-  host: env.SMTP_HOST,
-  port: env.SMTP_PORT,
-  secure: env.SMTP_PORT === 465,
-  auth: {
-    user: env.SMTP_USER,
-    pass: env.SMTP_PASS,
-  },
-});
+const transporter =
+  env.SMTP_HOST && env.SMTP_USER && env.SMTP_PASS
+    ? nodemailer.createTransport({
+        host: env.SMTP_HOST,
+        port: env.SMTP_PORT,
+        secure: env.SMTP_PORT === 465,
+        auth: {
+          user: env.SMTP_USER,
+          pass: env.SMTP_PASS,
+        },
+      })
+    : null;
+
+if (!transporter) {
+  console.warn('⚠️  SMTP not configured — emails will be logged to console');
+}
+
+async function sendOrLog(to: string, subject: string, html: string): Promise<void> {
+  if (transporter) {
+    await transporter.sendMail({ from: env.EMAIL_FROM, to, subject, html });
+  } else {
+    console.log(`📧 [EMAIL] To: ${to} | Subject: ${subject}`);
+  }
+}
 
 export async function sendVerificationEmail(email: string, token: string): Promise<void> {
   const verifyUrl = `${env.CLIENT_URL}/verify-email?token=${token}`;
 
-  await transporter.sendMail({
-    from: env.EMAIL_FROM,
-    to: email,
-    subject: 'Verify your Cardova email',
-    html: `
+  await sendOrLog(
+    email,
+    'Verify your Cardova email',
+    `
       <!DOCTYPE html>
       <html>
       <head><meta charset="utf-8"></head>
@@ -34,17 +48,16 @@ export async function sendVerificationEmail(email: string, token: string): Promi
       </body>
       </html>
     `,
-  });
+  );
 }
 
 export async function sendPasswordResetEmail(email: string, token: string): Promise<void> {
   const resetUrl = `${env.CLIENT_URL}/reset-password?token=${token}`;
 
-  await transporter.sendMail({
-    from: env.EMAIL_FROM,
-    to: email,
-    subject: 'Reset your Cardova password',
-    html: `
+  await sendOrLog(
+    email,
+    'Reset your Cardova password',
+    `
       <!DOCTYPE html>
       <html>
       <head><meta charset="utf-8"></head>
@@ -60,5 +73,5 @@ export async function sendPasswordResetEmail(email: string, token: string): Prom
       </body>
       </html>
     `,
-  });
+  );
 }
