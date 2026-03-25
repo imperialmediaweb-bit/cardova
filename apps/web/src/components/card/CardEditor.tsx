@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Save, Sparkles, Wand2, Building2, User, Zap, ChevronDown, ChevronRight, Globe, Image, Clock, Link2, Palette, Users } from 'lucide-react';
+import { Save, Sparkles, Wand2, Building2, User, Zap, ChevronDown, ChevronRight, Globe, Image, Clock, Link2, Palette, Users, Wifi, Linkedin, AtSign, Webhook } from 'lucide-react';
 import Input from '../ui/Input';
 import Button from '../ui/Button';
 import ThemePicker from './ThemePicker';
@@ -11,6 +11,7 @@ import ServicesEditor from './ServicesEditor';
 import CustomLinksEditor from './CustomLinksEditor';
 import BusinessHoursEditor from './BusinessHoursEditor';
 import GalleryEditor from './GalleryEditor';
+import EmailSignature from './EmailSignature';
 import { CardData, cardApi } from '../../api/card';
 import { aiApi } from '../../api/ai';
 import { useAuthStore } from '../../stores/authStore';
@@ -150,6 +151,42 @@ export default function CardEditor({ card, onChange }: CardEditorProps) {
     if (data.businessHours) updated.businessHours = data.businessHours;
     setForm(updated);
     onChange(updated);
+  };
+
+  const handleNFCWrite = async () => {
+    if (!('NDEFReader' in window)) {
+      toast.error('NFC not supported on this device/browser');
+      return;
+    }
+    try {
+      const ndef = new (window as any).NDEFReader();
+      await ndef.write({ records: [{ recordType: 'url', data: `https://cardova.net/${form.username}` }] });
+      toast.success('Card URL written to NFC tag!');
+    } catch (err: any) {
+      if (err.name === 'NotAllowedError') toast.error('NFC permission denied');
+      else toast.error('Failed to write NFC tag. Hold your phone near the tag.');
+    }
+  };
+
+  const handleLinkedInImport = async () => {
+    const url = prompt('Paste your LinkedIn profile URL:');
+    if (!url || !url.includes('linkedin.com')) { toast.error('Invalid LinkedIn URL'); return; }
+    toast.loading('Importing from LinkedIn...', { id: 'linkedin' });
+    try {
+      const res = await aiApi.importLinkedIn({ linkedinUrl: url });
+      const content = res.data.data.content;
+      const updated = { ...form };
+      if (content.displayName) updated.displayName = content.displayName;
+      if (content.title) updated.title = content.title;
+      if (content.company) updated.company = content.company;
+      if (content.location) updated.location = content.location;
+      if (content.bio) updated.bio = content.bio;
+      setForm(updated);
+      onChange(updated);
+      toast.success('LinkedIn profile imported!', { id: 'linkedin' });
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || 'Import failed', { id: 'linkedin' });
+    }
   };
 
   const isBusiness = form.cardType === 'business';
@@ -336,6 +373,96 @@ export default function CardEditor({ card, onChange }: CardEditorProps) {
           value={form.socialLinks || {}}
           onChange={(links) => updateField('socialLinks', links)}
         />
+      </Section>
+
+      {/* Integrations */}
+      <Section icon={Zap} title="Integrations" subtitle="NFC, webhooks, lead form & more" defaultOpen={false}>
+        {/* Lead Form Toggle */}
+        <div className="flex items-center justify-between py-2">
+          <div>
+            <p className="text-sm font-medium text-zinc-200">Lead Capture Form</p>
+            <p className="text-[11px] text-zinc-500">Show a contact form on your public card</p>
+          </div>
+          <button
+            type="button"
+            onClick={() => updateField('leadFormEnabled', !form.leadFormEnabled)}
+            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+              form.leadFormEnabled ? 'bg-green-500' : 'bg-zinc-700'
+            }`}
+          >
+            <span
+              className={`inline-block h-4 w-4 rounded-full bg-white transition-transform ${
+                form.leadFormEnabled ? 'translate-x-6' : 'translate-x-1'
+              }`}
+            />
+          </button>
+        </div>
+
+        {/* Webhook URL */}
+        <div className="space-y-1.5">
+          <label className="block text-sm font-medium text-zinc-300">Webhook URL</label>
+          <div className="flex items-center gap-2">
+            <Webhook className="w-4 h-4 text-zinc-500 flex-shrink-0" />
+            <input
+              type="url"
+              value={form.webhookUrl || ''}
+              onChange={(e) => updateField('webhookUrl', e.target.value || null)}
+              placeholder="https://your-server.com/webhook"
+              className="w-full px-3.5 py-2.5 bg-zinc-900 border border-zinc-700 rounded-lg text-zinc-100 placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent transition-colors text-sm"
+            />
+          </div>
+        </div>
+
+        {/* Webhook Events */}
+        {form.webhookUrl && (
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-zinc-300">Webhook Events</label>
+            {['view.created', 'lead.created', 'card.updated'].map((event) => (
+              <label key={event} className="flex items-center gap-2 text-sm text-zinc-400 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={(form.webhookEvents || []).includes(event)}
+                  onChange={(e) => {
+                    const events = form.webhookEvents || [];
+                    if (e.target.checked) {
+                      updateField('webhookEvents', [...events, event]);
+                    } else {
+                      updateField('webhookEvents', events.filter((ev) => ev !== event));
+                    }
+                  }}
+                  className="rounded border-zinc-600 bg-zinc-800 text-brand-500 focus:ring-brand-500"
+                />
+                {event}
+              </label>
+            ))}
+          </div>
+        )}
+
+        {/* NFC Write */}
+        <button
+          type="button"
+          onClick={handleNFCWrite}
+          className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 rounded-xl text-sm font-medium text-zinc-300 transition-colors"
+        >
+          <Wifi className="w-4 h-4" />
+          Write to NFC Tag
+        </button>
+
+        {/* LinkedIn Import */}
+        <button
+          type="button"
+          onClick={handleLinkedInImport}
+          className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-[#0077B5]/10 hover:bg-[#0077B5]/20 border border-[#0077B5]/30 rounded-xl text-sm font-medium text-[#0077B5] transition-colors"
+        >
+          <Linkedin className="w-4 h-4" />
+          Import from LinkedIn
+        </button>
+
+        {/* Email Signature */}
+        <div className="space-y-2">
+          <label className="block text-sm font-medium text-zinc-300">Email Signature</label>
+          <EmailSignature card={form} />
+        </div>
       </Section>
 
       {/* Published Toggle */}

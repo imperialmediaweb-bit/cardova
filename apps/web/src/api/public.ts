@@ -19,6 +19,7 @@ export interface PublicCardData {
     email?: string;
     phone?: string;
   };
+  leadFormEnabled: boolean;
   isPro: boolean;
   cardType: 'personal' | 'business';
   services: ServiceItem[];

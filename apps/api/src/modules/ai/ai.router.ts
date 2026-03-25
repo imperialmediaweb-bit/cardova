@@ -22,5 +22,6 @@ router.post('/generate-bio', aiRateLimit, asyncHandler(AIController.generateBio)
 router.post('/improve-bio', aiRateLimit, proMiddleware, asyncHandler(AIController.improveBio));
 router.post('/generate-services', aiRateLimit, asyncHandler(AIController.generateServices));
 router.post('/generate-business-content', aiRateLimit, asyncHandler(AIController.generateBusinessContent));
+router.post('/import-linkedin', aiRateLimit, asyncHandler(AIController.importLinkedIn));
 
 export { router as aiRouter };

@@ -10,6 +10,7 @@ import Dashboard from './pages/Dashboard';
 import Settings from './pages/Settings';
 import Billing from './pages/Billing';
 import Admin from './pages/Admin';
+import Leads from './pages/Leads';
 import Terms from './pages/Terms';
 import Privacy from './pages/Privacy';
 import PublicCard from './pages/PublicCard';
@@ -66,6 +67,14 @@ function App() {
         element={
           <ProtectedRoute>
             <Billing />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/leads"
+        element={
+          <ProtectedRoute>
+            <Leads />
           </ProtectedRoute>
         }
       />

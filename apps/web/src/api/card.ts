@@ -54,6 +54,11 @@ export interface CardData {
   customLinks: CustomLink[];
   businessHours: BusinessHour[];
   gallery: GalleryItem[];
+  customDomain: string | null;
+  domainVerified: boolean;
+  webhookUrl: string | null;
+  webhookEvents: string[];
+  leadFormEnabled: boolean;
   createdAt: string;
   updatedAt: string;
 }

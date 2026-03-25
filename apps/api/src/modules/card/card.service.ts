@@ -71,6 +71,10 @@ export class CardService {
         ...(data.customLinks !== undefined && { customLinks: data.customLinks }),
         ...(data.businessHours !== undefined && { businessHours: data.businessHours }),
         ...(data.gallery !== undefined && { gallery: data.gallery }),
+        ...(data.webhookUrl !== undefined && { webhookUrl: data.webhookUrl || null }),
+        ...(data.webhookEvents !== undefined && { webhookEvents: data.webhookEvents }),
+        ...(data.leadFormEnabled !== undefined && { leadFormEnabled: data.leadFormEnabled }),
+        ...(data.customDomain !== undefined && { customDomain: data.customDomain || null }),
       },
     });
 

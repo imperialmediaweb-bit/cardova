@@ -16,6 +16,9 @@ import { analyticsRouter } from './modules/analytics/analytics.router';
 import { publicRouter } from './modules/public/public.router';
 import { settingsRouter } from './modules/settings/settings.router';
 import { adminRouter } from './modules/admin/admin.router';
+import { leadsRouter } from './modules/leads/leads.router';
+import { teamRouter } from './modules/team/team.router';
+import { whiteLabelRouter } from './modules/whitelabel/whitelabel.router';
 
 const app = express();
 
@@ -83,6 +86,9 @@ app.use('/api/analytics', analyticsRouter);
 app.use('/api/public', publicRouter);
 app.use('/api/settings', settingsRouter);
 app.use('/api/admin', adminRouter);
+app.use('/api/leads', leadsRouter);
+app.use('/api/team', teamRouter);
+app.use('/api/whitelabel', whiteLabelRouter);
 
 // Serve frontend static files in production
 if (env.NODE_ENV === 'production') {

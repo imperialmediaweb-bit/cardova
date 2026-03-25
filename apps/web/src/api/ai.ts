@@ -50,4 +50,7 @@ export const aiApi = {
         provider: AIProvider;
       };
     }>('/ai/generate-business-content', data),
+
+  importLinkedIn: (data: { linkedinUrl: string; provider?: AIProvider }) =>
+    client.post<{ success: boolean; data: { content: any; provider: AIProvider } }>('/ai/import-linkedin', data),
 };

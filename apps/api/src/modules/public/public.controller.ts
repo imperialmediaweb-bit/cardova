@@ -52,6 +52,7 @@ export class PublicController {
         customLinks: card.customLinks,
         businessHours: card.businessHours,
         gallery: card.gallery,
+        leadFormEnabled: card.leadFormEnabled,
       },
     });
   }

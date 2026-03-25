@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { useQuery } from '@tanstack/react-query';
@@ -6,6 +7,7 @@ import toast from 'react-hot-toast';
 import Spinner from '../components/ui/Spinner';
 import Button from '../components/ui/Button';
 import { publicApi, PublicCardData } from '../api/public';
+import { leadsApi } from '../api/leads';
 import type { ServiceItem, CustomLink, BusinessHour, GalleryItem } from '../api/card';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
@@ -44,6 +46,10 @@ function getImageUrl(url: string) {
 
 export default function PublicCard() {
   const { username } = useParams<{ username: string }>();
+
+  const [leadForm, setLeadForm] = useState({ name: '', email: '', message: '' });
+  const [leadSending, setLeadSending] = useState(false);
+  const [leadSent, setLeadSent] = useState(false);
 
   const { data: card, isLoading, error } = useQuery({
     queryKey: ['public-card', username],
@@ -430,6 +436,26 @@ export default function PublicCard() {
                 Share
               </button>
             </div>
+
+            {/* Lead Capture Form */}
+            {card.leadFormEnabled && !leadSent && (
+              <div className={`mt-6 rounded-xl p-5 ${t.sectionBg} border ${t.sectionBorder}`}>
+                <h3 className={`text-sm font-semibold mb-3 ${t.sectionTitle}`}>Get in Touch</h3>
+                <form onSubmit={async (e) => { e.preventDefault(); setLeadSending(true); try { await leadsApi.submitLead(username!, leadForm); setLeadSent(true); toast.success('Message sent!'); } catch { toast.error('Failed to send. Try again.'); } finally { setLeadSending(false); } }} className="space-y-2">
+                  <input value={leadForm.name} onChange={(e) => setLeadForm({...leadForm, name: e.target.value})} placeholder="Your name" required className="w-full px-3 py-2 bg-black/20 border border-white/10 rounded-lg text-sm text-white placeholder-white/40 focus:outline-none focus:ring-1 focus:ring-white/30" />
+                  <input value={leadForm.email} onChange={(e) => setLeadForm({...leadForm, email: e.target.value})} type="email" placeholder="Your email" required className="w-full px-3 py-2 bg-black/20 border border-white/10 rounded-lg text-sm text-white placeholder-white/40 focus:outline-none focus:ring-1 focus:ring-white/30" />
+                  <textarea value={leadForm.message} onChange={(e) => setLeadForm({...leadForm, message: e.target.value})} placeholder="Message (optional)" rows={2} className="w-full px-3 py-2 bg-black/20 border border-white/10 rounded-lg text-sm text-white placeholder-white/40 focus:outline-none focus:ring-1 focus:ring-white/30 resize-none" />
+                  <button type="submit" disabled={leadSending} className={`w-full py-2.5 rounded-lg text-sm font-medium transition-colors ${t.contactBtn} disabled:opacity-50`}>
+                    {leadSending ? 'Sending...' : 'Send Message'}
+                  </button>
+                </form>
+              </div>
+            )}
+            {card.leadFormEnabled && leadSent && (
+              <div className={`mt-6 rounded-xl p-5 text-center ${t.sectionBg} border ${t.sectionBorder}`}>
+                <p className={`text-sm ${t.sectionTitle}`}>Thanks! Message sent successfully.</p>
+              </div>
+            )}
 
             {/* Powered by Cardova */}
             {!card.isPro && (

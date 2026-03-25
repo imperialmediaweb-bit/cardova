@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { LogOut, LayoutDashboard, Settings, CreditCard, Shield, Menu, X } from 'lucide-react';
+import { LogOut, LayoutDashboard, Settings, CreditCard, Shield, Menu, X, MessageSquare } from 'lucide-react';
 import { useAuthStore } from '../../stores/authStore';
 import { authApi } from '../../api/auth';
 import Badge from '../ui/Badge';
@@ -22,6 +22,7 @@ export default function Navbar() {
 
   const navLinks = user ? [
     { to: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
+    { to: '/leads', icon: MessageSquare, label: 'Leads' },
     { to: '/billing', icon: CreditCard, label: 'Billing' },
     { to: '/settings', icon: Settings, label: 'Settings' },
     ...(user.role === 'admin' ? [{ to: '/admin', icon: Shield, label: 'Admin' }] : []),

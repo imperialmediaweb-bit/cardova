@@ -173,6 +173,24 @@ Return ONLY valid JSON, no markdown.`,
     return getAvailableProviders();
   }
 
+  static async importFromLinkedIn(userId: string, linkedinUrl: string, provider: LLMProvider = 'openai') {
+    await AIService.checkCredits(userId);
+    const result = await generateWithLLM(provider, {
+      messages: [
+        { role: 'system', content: `You are a digital business card creator. Given a LinkedIn profile URL, create realistic card content based on what you can infer from the URL pattern. Return a JSON object with: displayName, title, company, location, bio (2-3 sentences first person). Return ONLY valid JSON.` },
+        { role: 'user', content: `LinkedIn URL: ${linkedinUrl}` },
+      ],
+      maxTokens: 400,
+      temperature: 0.7,
+    });
+    await prisma.user.update({ where: { id: userId }, data: { aiCreditsUsed: { increment: 1 } } });
+    try {
+      return { content: JSON.parse(result), provider };
+    } catch {
+      throw new AppError('AI returned invalid format. Please try again.', 500);
+    }
+  }
+
   private static async checkCredits(userId: string) {
     const user = await prisma.user.findUnique({ where: { id: userId } });
     if (!user) throw new AppError('User not found', 404);

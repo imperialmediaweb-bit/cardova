@@ -22,6 +22,11 @@ const generateServicesSchema = z.object({
   provider: z.enum(['openai', 'claude', 'gemini']).optional().default('openai'),
 });
 
+const importLinkedInSchema = z.object({
+  linkedinUrl: z.string().url().min(1),
+  provider: z.enum(['openai', 'claude', 'gemini']).optional().default('openai'),
+});
+
 const generateBusinessContentSchema = z.object({
   businessName: z.string().min(1).max(100),
   industry: z.string().min(1).max(100),
@@ -70,6 +75,12 @@ export class AIController {
       data.location,
       data.provider,
     );
+    res.json({ success: true, data: result });
+  }
+
+  static async importLinkedIn(req: Request, res: Response) {
+    const data = importLinkedInSchema.parse(req.body);
+    const result = await AIService.importFromLinkedIn(req.user!.userId, data.linkedinUrl, data.provider);
     res.json({ success: true, data: result });
   }
 
