@@ -8,5 +8,6 @@ const router = Router();
 
 router.post('/webhook', express.raw({ type: 'application/json' }), asyncHandler(StripeController.webhook));
 router.post('/checkout', asyncHandler(authMiddleware), asyncHandler(StripeController.createCheckout));
+router.post('/portal', asyncHandler(authMiddleware), asyncHandler(StripeController.createPortal));
 
 export { router as stripeRouter };

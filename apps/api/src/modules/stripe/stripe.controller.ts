@@ -13,6 +13,11 @@ export class StripeController {
     res.json({ success: true, data: result });
   }
 
+  static async createPortal(req: Request, res: Response) {
+    const result = await StripeService.createPortal(req.user!.userId);
+    res.json({ success: true, data: result });
+  }
+
   static async webhook(req: Request, res: Response) {
     const signature = req.headers['stripe-signature'] as string;
     if (!signature) {

@@ -47,7 +47,7 @@ function getImageUrl(url: string) {
 export default function PublicCard() {
   const { username } = useParams<{ username: string }>();
 
-  const [leadForm, setLeadForm] = useState({ name: '', email: '', message: '' });
+  const [leadForm, setLeadForm] = useState({ name: '', email: '', phone: '', message: '' });
   const [leadSending, setLeadSending] = useState(false);
   const [leadSent, setLeadSent] = useState(false);
 
@@ -84,7 +84,7 @@ export default function PublicCard() {
       a.click();
       URL.revokeObjectURL(url);
     } catch {
-      // Silent fail for VCF download
+      toast.error('Failed to download contact');
     }
   };
 
@@ -444,6 +444,7 @@ export default function PublicCard() {
                 <form onSubmit={async (e) => { e.preventDefault(); setLeadSending(true); try { await leadsApi.submitLead(username!, leadForm); setLeadSent(true); toast.success('Message sent!'); } catch { toast.error('Failed to send. Try again.'); } finally { setLeadSending(false); } }} className="space-y-2">
                   <input value={leadForm.name} onChange={(e) => setLeadForm({...leadForm, name: e.target.value})} placeholder="Your name" required className="w-full px-3 py-2 bg-black/20 border border-white/10 rounded-lg text-sm text-white placeholder-white/40 focus:outline-none focus:ring-1 focus:ring-white/30" />
                   <input value={leadForm.email} onChange={(e) => setLeadForm({...leadForm, email: e.target.value})} type="email" placeholder="Your email" required className="w-full px-3 py-2 bg-black/20 border border-white/10 rounded-lg text-sm text-white placeholder-white/40 focus:outline-none focus:ring-1 focus:ring-white/30" />
+                  <input value={leadForm.phone || ''} onChange={(e) => setLeadForm({...leadForm, phone: e.target.value})} type="tel" placeholder="Phone (optional)" className="w-full px-3 py-2 bg-black/20 border border-white/10 rounded-lg text-sm text-white placeholder-white/40 focus:outline-none focus:ring-1 focus:ring-white/30" />
                   <textarea value={leadForm.message} onChange={(e) => setLeadForm({...leadForm, message: e.target.value})} placeholder="Message (optional)" rows={2} className="w-full px-3 py-2 bg-black/20 border border-white/10 rounded-lg text-sm text-white placeholder-white/40 focus:outline-none focus:ring-1 focus:ring-white/30 resize-none" />
                   <button type="submit" disabled={leadSending} className={`w-full py-2.5 rounded-lg text-sm font-medium transition-colors ${t.contactBtn} disabled:opacity-50`}>
                     {leadSending ? 'Sending...' : 'Send Message'}

@@ -87,24 +87,6 @@ export default function Login() {
             </Button>
           </form>
 
-          {/* Demo Account */}
-          <div className="mt-6 p-4 bg-zinc-900/50 border border-zinc-800 rounded-xl">
-            <p className="text-xs text-zinc-500 uppercase tracking-wider font-medium mb-2">Demo Account (Pro)</p>
-            <button
-              type="button"
-              onClick={() => {
-                setEmail('admin@cardova.app');
-                setPassword('Admin123!');
-              }}
-              className="w-full text-left text-sm text-zinc-400 hover:text-zinc-200 transition-colors"
-            >
-              <span className="text-zinc-300 font-mono">admin@cardova.app</span>
-              <span className="text-zinc-600 mx-2">/</span>
-              <span className="text-zinc-300 font-mono">Admin123!</span>
-              <span className="ml-2 text-xs text-brand-400">click to fill</span>
-            </button>
-          </div>
-
           <p className="text-center text-sm text-zinc-400 mt-6">
             Don't have an account?{' '}
             <Link to="/register" className="text-brand-400 hover:text-brand-300 font-medium">

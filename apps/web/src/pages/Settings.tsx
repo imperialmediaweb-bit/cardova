@@ -33,9 +33,14 @@ export default function Settings() {
     e.preventDefault();
     setProfileSaving(true);
     try {
+      const emailChanged = email !== user?.email;
       const res = await settingsApi.updateProfile({ name, email });
       updateUser(res.data.data);
-      toast.success('Profile updated');
+      if (emailChanged) {
+        toast.success('Profile updated. Check your new email for a verification link.', { duration: 6000 });
+      } else {
+        toast.success('Profile updated');
+      }
     } catch (err: any) {
       toast.error(err.response?.data?.message || 'Failed to update profile');
     } finally {

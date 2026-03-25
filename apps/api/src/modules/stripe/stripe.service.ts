@@ -44,6 +44,21 @@ export class StripeService {
     return { url: session.url };
   }
 
+  static async createPortal(userId: string) {
+    if (!stripe) throw new AppError('Stripe is not configured', 503);
+
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+    if (!user) throw new AppError('User not found', 404);
+    if (!user.stripeCustomerId) throw new AppError('No billing account found', 400);
+
+    const session = await stripe.billingPortal.sessions.create({
+      customer: user.stripeCustomerId,
+      return_url: `${env.CLIENT_URL}/billing`,
+    });
+
+    return { url: session.url };
+  }
+
   static async handleWebhook(payload: Buffer, signature: string) {
     if (!stripe) throw new AppError('Stripe is not configured', 503);
     if (!env.STRIPE_WEBHOOK_SECRET) throw new AppError('Stripe webhook secret not configured', 503);

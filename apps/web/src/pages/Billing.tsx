@@ -69,9 +69,25 @@ export default function Billing() {
               </div>
             </div>
             {user?.isPro && (
-              <span className="px-3 py-1 bg-brand-500/20 text-brand-400 text-sm font-medium rounded-full">
-                Active
-              </span>
+              <div className="flex items-center gap-3">
+                <span className="px-3 py-1 bg-brand-500/20 text-brand-400 text-sm font-medium rounded-full">
+                  Active
+                </span>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={async () => {
+                    try {
+                      const res = await stripeApi.createPortal();
+                      window.location.href = res.data.data.url;
+                    } catch {
+                      toast.error('Unable to open billing portal. Contact support.');
+                    }
+                  }}
+                >
+                  Manage Subscription
+                </Button>
+              </div>
             )}
           </div>
         </div>

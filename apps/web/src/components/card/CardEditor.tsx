@@ -107,6 +107,10 @@ export default function CardEditor({ card, onChange }: CardEditorProps) {
         customLinks: form.customLinks,
         businessHours: form.businessHours,
         gallery: form.gallery,
+        webhookUrl: form.webhookUrl,
+        webhookEvents: form.webhookEvents,
+        leadFormEnabled: form.leadFormEnabled,
+        customDomain: form.customDomain,
       });
       onChange(res.data.data);
       toast.success('Card saved!');
@@ -396,6 +400,19 @@ export default function CardEditor({ card, onChange }: CardEditorProps) {
               }`}
             />
           </button>
+        </div>
+
+        {/* Custom Domain */}
+        <div className="space-y-1.5">
+          <label className="block text-sm font-medium text-zinc-300">Custom Domain</label>
+          <input
+            type="text"
+            value={form.customDomain || ''}
+            onChange={(e) => updateField('customDomain', e.target.value || null)}
+            placeholder="cards.yourbusiness.com"
+            className="w-full px-3.5 py-2.5 bg-zinc-900 border border-zinc-700 rounded-lg text-zinc-100 placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent transition-colors text-sm"
+          />
+          <p className="text-[11px] text-zinc-500">Point a CNAME record to cardova.net, then enter your domain here.</p>
         </div>
 
         {/* Webhook URL */}
