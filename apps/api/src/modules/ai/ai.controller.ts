@@ -15,6 +15,20 @@ const improveBioSchema = z.object({
   provider: z.enum(['openai', 'claude', 'gemini']).optional().default('openai'),
 });
 
+const generateServicesSchema = z.object({
+  businessName: z.string().min(1).max(100),
+  industry: z.string().min(1).max(100),
+  description: z.string().max(500).optional().default(''),
+  provider: z.enum(['openai', 'claude', 'gemini']).optional().default('openai'),
+});
+
+const generateBusinessContentSchema = z.object({
+  businessName: z.string().min(1).max(100),
+  industry: z.string().min(1).max(100),
+  location: z.string().max(100).optional().default(''),
+  provider: z.enum(['openai', 'claude', 'gemini']).optional().default('openai'),
+});
+
 export class AIController {
   static async generateBio(req: Request, res: Response) {
     const data = generateBioSchema.parse(req.body);
@@ -32,6 +46,30 @@ export class AIController {
   static async improveBio(req: Request, res: Response) {
     const data = improveBioSchema.parse(req.body);
     const result = await AIService.improveBio(req.user!.userId, data.bio, data.provider);
+    res.json({ success: true, data: result });
+  }
+
+  static async generateServices(req: Request, res: Response) {
+    const data = generateServicesSchema.parse(req.body);
+    const result = await AIService.generateServices(
+      req.user!.userId,
+      data.businessName,
+      data.industry,
+      data.description,
+      data.provider,
+    );
+    res.json({ success: true, data: result });
+  }
+
+  static async generateBusinessContent(req: Request, res: Response) {
+    const data = generateBusinessContentSchema.parse(req.body);
+    const result = await AIService.generateBusinessContent(
+      req.user!.userId,
+      data.businessName,
+      data.industry,
+      data.location,
+      data.provider,
+    );
     res.json({ success: true, data: result });
   }
 

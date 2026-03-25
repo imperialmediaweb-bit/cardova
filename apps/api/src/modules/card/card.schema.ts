@@ -2,6 +2,34 @@ import { z } from 'zod';
 
 const RESERVED_USERNAMES = ['api', 'admin', 'login', 'register', 'dashboard', 'settings', 'billing', 'help', 'support', 'about', 'terms', 'privacy', 'verify-email', 'reset-password', 'forgot-password'];
 
+const serviceSchema = z.object({
+  id: z.string(),
+  name: z.string().max(100),
+  description: z.string().max(300).optional().default(''),
+  price: z.string().max(50).optional().default(''),
+  icon: z.string().max(50).optional().default('briefcase'),
+});
+
+const customLinkSchema = z.object({
+  id: z.string(),
+  title: z.string().max(100),
+  url: z.string().max(500),
+  icon: z.string().max(50).optional().default('link'),
+});
+
+const businessHourSchema = z.object({
+  day: z.string(),
+  open: z.string().optional().default(''),
+  close: z.string().optional().default(''),
+  closed: z.boolean().optional().default(false),
+});
+
+const galleryItemSchema = z.object({
+  id: z.string(),
+  url: z.string(),
+  caption: z.string().max(200).optional().default(''),
+});
+
 export const updateCardSchema = z.object({
   username: z.string()
     .min(3, 'Username must be at least 3 characters')
@@ -25,6 +53,11 @@ export const updateCardSchema = z.object({
     email: z.string().optional(),
     phone: z.string().optional(),
   }).optional(),
+  cardType: z.enum(['personal', 'business']).optional(),
+  services: z.array(serviceSchema).max(20).optional(),
+  customLinks: z.array(customLinkSchema).max(20).optional(),
+  businessHours: z.array(businessHourSchema).max(7).optional(),
+  gallery: z.array(galleryItemSchema).max(20).optional(),
 });
 
 export type UpdateCardInput = z.infer<typeof updateCardSchema>;

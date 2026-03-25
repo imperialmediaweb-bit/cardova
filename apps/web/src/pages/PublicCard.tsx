@@ -1,10 +1,11 @@
 import { useParams, Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { useQuery } from '@tanstack/react-query';
-import { Download, Share2, Twitter, Linkedin, Github, Instagram, Globe, Mail, Phone, MapPin } from 'lucide-react';
+import { Download, Share2, Twitter, Linkedin, Github, Instagram, Globe, Mail, Phone, MapPin, Clock, ExternalLink, Briefcase, Code, Palette, Camera, Wrench, Heart, BookOpen, ShoppingBag, Link as LinkIcon, Calendar, FileText, Map, Star, Menu } from 'lucide-react';
 import Spinner from '../components/ui/Spinner';
 import Button from '../components/ui/Button';
 import { publicApi, PublicCardData } from '../api/public';
+import type { ServiceItem, CustomLink, BusinessHour, GalleryItem } from '../api/card';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
@@ -18,11 +19,26 @@ const socialIcons = [
   { key: 'phone', icon: Phone, label: 'Phone' },
 ] as const;
 
+const serviceIconMap: Record<string, React.ElementType> = {
+  briefcase: Briefcase, code: Code, palette: Palette, camera: Camera,
+  wrench: Wrench, heart: Heart, 'book-open': BookOpen, 'shopping-bag': ShoppingBag,
+};
+
+const linkIconMap: Record<string, React.ElementType> = {
+  link: LinkIcon, calendar: Calendar, 'shopping-bag': ShoppingBag, camera: Camera,
+  'file-text': FileText, map: Map, star: Star, menu: Menu, 'external-link': ExternalLink,
+};
+
 function getSocialUrl(key: string, value: string) {
   if (key === 'email') return `mailto:${value}`;
   if (key === 'phone') return `tel:${value}`;
   if (value.startsWith('http')) return value;
   return `https://${value}`;
+}
+
+function getImageUrl(url: string) {
+  if (url.startsWith('http')) return url;
+  return `${API_URL}${url}`;
 }
 
 export default function PublicCard() {
@@ -37,10 +53,6 @@ export default function PublicCard() {
 
   const handleDownloadVCF = async () => {
     try {
-      const response = await fetch(`${API_URL}/api/card/vcf`, {
-        headers: { 'Content-Type': 'application/json' },
-      });
-      // For public VCF, we build it client-side since the API route requires auth
       if (!card) return;
 
       const lines = [
@@ -117,7 +129,13 @@ export default function PublicCard() {
     (s) => card.socialLinks?.[s.key as keyof typeof card.socialLinks],
   );
 
-  const themeStyles: Record<string, { bg: string; card: string; name: string; subtitle: string; bio: string; iconBg: string; contactBtn: string; badge: string; actionBtn: string }> = {
+  const isBusiness = card.cardType === 'business';
+  const services = ((card.services || []) as ServiceItem[]).filter((s) => s.name);
+  const customLinks = ((card.customLinks || []) as CustomLink[]).filter((l) => l.title && l.url);
+  const businessHours = ((card.businessHours || []) as BusinessHour[]).filter((h) => h.day);
+  const gallery = ((card.gallery || []) as GalleryItem[]).filter((g) => g.url);
+
+  const themeStyles: Record<string, { bg: string; card: string; name: string; subtitle: string; bio: string; iconBg: string; contactBtn: string; badge: string; actionBtn: string; sectionTitle: string; sectionBg: string; sectionBorder: string; linkBtn: string }> = {
     minimal: {
       bg: 'bg-zinc-50 min-h-screen',
       card: 'bg-white shadow-2xl shadow-zinc-200/50',
@@ -128,6 +146,10 @@ export default function PublicCard() {
       contactBtn: 'bg-zinc-900 hover:bg-zinc-800 text-white',
       badge: 'text-zinc-400',
       actionBtn: 'text-zinc-500 hover:text-zinc-700 bg-zinc-100 hover:bg-zinc-200',
+      sectionTitle: 'text-zinc-800',
+      sectionBg: 'bg-zinc-50',
+      sectionBorder: 'border-zinc-200',
+      linkBtn: 'bg-zinc-100 hover:bg-zinc-200 text-zinc-700',
     },
     bold: {
       bg: 'bg-zinc-950 min-h-screen',
@@ -139,6 +161,10 @@ export default function PublicCard() {
       contactBtn: 'bg-brand-500 hover:bg-brand-600 text-white',
       badge: 'text-zinc-600',
       actionBtn: 'text-zinc-500 hover:text-zinc-300 bg-zinc-800 hover:bg-zinc-700',
+      sectionTitle: 'text-zinc-200',
+      sectionBg: 'bg-zinc-800/50',
+      sectionBorder: 'border-zinc-700',
+      linkBtn: 'bg-zinc-800 hover:bg-zinc-700 text-zinc-300',
     },
     glass: {
       bg: 'min-h-screen bg-gradient-to-br from-brand-600 via-purple-600 to-pink-600',
@@ -150,6 +176,10 @@ export default function PublicCard() {
       contactBtn: 'bg-white hover:bg-white/90 text-zinc-900',
       badge: 'text-white/30',
       actionBtn: 'text-white/50 hover:text-white/80 bg-white/10 hover:bg-white/20',
+      sectionTitle: 'text-white/90',
+      sectionBg: 'bg-white/5',
+      sectionBorder: 'border-white/10',
+      linkBtn: 'bg-white/10 hover:bg-white/20 text-white/80',
     },
     neon: {
       bg: 'bg-zinc-950 min-h-screen',
@@ -161,6 +191,10 @@ export default function PublicCard() {
       contactBtn: 'bg-green-500 hover:bg-green-600 text-white',
       badge: 'text-green-400/30',
       actionBtn: 'text-green-400/50 hover:text-green-300 bg-green-400/10 hover:bg-green-400/20',
+      sectionTitle: 'text-green-300',
+      sectionBg: 'bg-green-400/5',
+      sectionBorder: 'border-green-400/20',
+      linkBtn: 'bg-green-400/10 hover:bg-green-400/20 text-green-300',
     },
     sunset: {
       bg: 'min-h-screen bg-gradient-to-br from-orange-500 via-rose-500 to-pink-600',
@@ -172,6 +206,10 @@ export default function PublicCard() {
       contactBtn: 'bg-white hover:bg-white/90 text-zinc-900',
       badge: 'text-white/30',
       actionBtn: 'text-white/50 hover:text-white/80 bg-white/10 hover:bg-white/20',
+      sectionTitle: 'text-white/90',
+      sectionBg: 'bg-white/5',
+      sectionBorder: 'border-white/10',
+      linkBtn: 'bg-white/10 hover:bg-white/20 text-white/90',
     },
     ocean: {
       bg: 'min-h-screen bg-gradient-to-br from-blue-600 via-cyan-600 to-teal-500',
@@ -183,6 +221,10 @@ export default function PublicCard() {
       contactBtn: 'bg-white hover:bg-white/90 text-zinc-900',
       badge: 'text-white/30',
       actionBtn: 'text-white/50 hover:text-white/80 bg-white/10 hover:bg-white/20',
+      sectionTitle: 'text-white/90',
+      sectionBg: 'bg-white/5',
+      sectionBorder: 'border-white/10',
+      linkBtn: 'bg-white/10 hover:bg-white/20 text-white/90',
     },
   };
 
@@ -274,26 +316,128 @@ export default function PublicCard() {
                   Contact Me
                 </a>
               )}
+            </div>
 
-              {/* Action Buttons */}
-              <div className="flex gap-2 mt-5">
-                <button onClick={handleDownloadVCF} className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm transition-colors ${t.actionBtn}`}>
-                  <Download className="w-4 h-4" />
-                  Save Contact
-                </button>
-                <button onClick={handleShare} className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm transition-colors ${t.actionBtn}`}>
-                  <Share2 className="w-4 h-4" />
-                  Share
-                </button>
+            {/* Business Sections */}
+            {isBusiness && (
+              <div className="mt-6 space-y-4">
+                {/* Services */}
+                {services.length > 0 && (
+                  <div className={`rounded-xl p-5 ${t.sectionBg} border ${t.sectionBorder}`}>
+                    <h3 className={`text-sm font-semibold mb-4 ${t.sectionTitle}`}>Services</h3>
+                    <div className="space-y-3">
+                      {services.map((service) => {
+                        const IconComp = serviceIconMap[service.icon || 'briefcase'] || Briefcase;
+                        return (
+                          <div key={service.id} className="flex items-start gap-3">
+                            <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${t.iconBg}`}>
+                              <IconComp className="w-4 h-4" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center justify-between gap-2">
+                                <p className={`text-sm font-medium ${t.name}`}>{service.name}</p>
+                                {service.price && (
+                                  <span className={`text-xs font-medium flex-shrink-0 ${t.subtitle}`}>{service.price}</span>
+                                )}
+                              </div>
+                              {service.description && (
+                                <p className={`text-xs mt-0.5 leading-relaxed ${t.bio}`}>{service.description}</p>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {/* Custom Links */}
+                {customLinks.length > 0 && (
+                  <div className="space-y-2">
+                    {customLinks.map((link) => {
+                      const IconComp = linkIconMap[link.icon || 'link'] || LinkIcon;
+                      return (
+                        <a
+                          key={link.id}
+                          href={link.url.startsWith('http') ? link.url : `https://${link.url}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className={`flex items-center gap-3 px-4 py-3.5 rounded-xl transition-colors ${t.linkBtn}`}
+                        >
+                          <IconComp className="w-4 h-4 flex-shrink-0" />
+                          <span className="text-sm font-medium flex-1">{link.title}</span>
+                          <ExternalLink className="w-3.5 h-3.5 opacity-50" />
+                        </a>
+                      );
+                    })}
+                  </div>
+                )}
+
+                {/* Gallery */}
+                {gallery.length > 0 && (
+                  <div className={`rounded-xl p-5 ${t.sectionBg} border ${t.sectionBorder}`}>
+                    <h3 className={`text-sm font-semibold mb-3 ${t.sectionTitle}`}>Gallery</h3>
+                    <div className="grid grid-cols-3 gap-2">
+                      {gallery.map((item) => (
+                        <div key={item.id} className="aspect-square rounded-lg overflow-hidden group relative">
+                          <img
+                            src={getImageUrl(item.url)}
+                            alt={item.caption || ''}
+                            className="w-full h-full object-cover"
+                          />
+                          {item.caption && (
+                            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/50 transition-colors flex items-end opacity-0 group-hover:opacity-100">
+                              <p className="text-white text-xs p-2 leading-tight">{item.caption}</p>
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Business Hours */}
+                {businessHours.length > 0 && (
+                  <div className={`rounded-xl p-5 ${t.sectionBg} border ${t.sectionBorder}`}>
+                    <h3 className={`text-sm font-semibold mb-3 flex items-center gap-2 ${t.sectionTitle}`}>
+                      <Clock className="w-4 h-4" />
+                      Business Hours
+                    </h3>
+                    <div className="space-y-1.5">
+                      {businessHours.map((hour) => (
+                        <div key={hour.day} className={`flex justify-between text-sm ${t.bio}`}>
+                          <span className="font-medium">{hour.day}</span>
+                          <span className={hour.closed ? 'opacity-50' : ''}>
+                            {hour.closed ? 'Closed' : `${hour.open} — ${hour.close}`}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
+            )}
 
-              {/* Powered by Cardova */}
-              {!card.isPro && (
-                <Link to="/" className={`mt-8 text-xs hover:underline ${t.badge}`}>
+            {/* Action Buttons */}
+            <div className="flex gap-2 mt-6 justify-center">
+              <button onClick={handleDownloadVCF} className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm transition-colors ${t.actionBtn}`}>
+                <Download className="w-4 h-4" />
+                Save Contact
+              </button>
+              <button onClick={handleShare} className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm transition-colors ${t.actionBtn}`}>
+                <Share2 className="w-4 h-4" />
+                Share
+              </button>
+            </div>
+
+            {/* Powered by Cardova */}
+            {!card.isPro && (
+              <div className="text-center mt-6">
+                <Link to="/" className={`text-xs hover:underline ${t.badge}`}>
                   Powered by Cardova
                 </Link>
-              )}
-            </div>
+              </div>
+            )}
           </div>
 
           {/* Get your card CTA */}

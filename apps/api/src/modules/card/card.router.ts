@@ -23,6 +23,7 @@ router.use(asyncHandler(authMiddleware));
 router.get('/', asyncHandler(CardController.getCard));
 router.put('/', asyncHandler(CardController.updateCard));
 router.post('/upload-avatar', upload.single('avatar'), asyncHandler(CardController.uploadAvatar));
+router.post('/upload-gallery', upload.single('image'), asyncHandler(CardController.uploadGalleryImage));
 router.get('/qr', asyncHandler(CardController.getQR));
 router.get('/vcf', asyncHandler(CardController.getVCF));
 

@@ -65,6 +65,51 @@ export class CardController {
     res.json({ success: true, data: result });
   }
 
+  static async uploadGalleryImage(req: Request, res: Response) {
+    if (!req.file) {
+      return res.status(400).json({ success: false, message: 'No file uploaded' });
+    }
+
+    let imageUrl: string;
+
+    if (env.CLOUDINARY_URL) {
+      const cloudinary = (await import('cloudinary')).v2;
+      cloudinary.config({ url: env.CLOUDINARY_URL });
+
+      const publicId = `gallery-${req.user!.userId}-${Date.now()}`;
+      const result = await new Promise<any>((resolve, reject) => {
+        const stream = cloudinary.uploader.upload_stream(
+          {
+            folder: 'cardova/gallery',
+            transformation: [{ width: 800, height: 800, crop: 'limit', quality: 'auto' }],
+            public_id: publicId,
+          },
+          (error, result) => {
+            if (error) reject(error);
+            else resolve(result);
+          }
+        );
+        stream.end(req.file!.buffer);
+      });
+
+      imageUrl = result.secure_url;
+    } else {
+      const uploadDir = path.join(env.STORAGE_PATH, 'gallery');
+      if (!fs.existsSync(uploadDir)) {
+        fs.mkdirSync(uploadDir, { recursive: true });
+      }
+
+      const ext = path.extname(req.file.originalname) || '.jpg';
+      const filename = `${req.user!.userId}-${Date.now()}${ext}`;
+      const filepath = path.join(uploadDir, filename);
+
+      fs.writeFileSync(filepath, req.file.buffer);
+      imageUrl = `/uploads/gallery/${filename}`;
+    }
+
+    res.json({ success: true, data: { url: imageUrl } });
+  }
+
   static async getQR(req: Request, res: Response) {
     const card = await CardService.getCard(req.user!.userId);
     const qrBuffer = await generateQR(card.username);

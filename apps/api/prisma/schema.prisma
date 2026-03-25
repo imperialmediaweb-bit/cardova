@@ -36,22 +36,27 @@ model RefreshToken {
 }
 
 model Card {
-  id          String   @id @default(cuid())
-  userId      String   @unique
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  username    String   @unique
-  displayName String
-  title       String   @default("")
-  company     String   @default("")
-  location    String   @default("")
-  bio         String   @default("")
-  avatarUrl   String?
-  theme       String   @default("minimal")
-  isPublished Boolean  @default(true)
-  socialLinks Json     @default("{}")
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  views       CardView[]
+  id            String   @id @default(cuid())
+  userId        String   @unique
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  username      String   @unique
+  displayName   String
+  title         String   @default("")
+  company       String   @default("")
+  location      String   @default("")
+  bio           String   @default("")
+  avatarUrl     String?
+  theme         String   @default("minimal")
+  isPublished   Boolean  @default(true)
+  socialLinks   Json     @default("{}")
+  cardType      String   @default("personal")
+  services      Json     @default("[]")
+  customLinks   Json     @default("[]")
+  businessHours Json     @default("[]")
+  gallery       Json     @default("[]")
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  views         CardView[]
 }
 
 model CardView {

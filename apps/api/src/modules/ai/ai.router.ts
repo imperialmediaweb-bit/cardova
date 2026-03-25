@@ -20,5 +20,7 @@ router.use(asyncHandler(authMiddleware));
 router.get('/providers', asyncHandler(AIController.getProviders));
 router.post('/generate-bio', aiRateLimit, asyncHandler(AIController.generateBio));
 router.post('/improve-bio', aiRateLimit, proMiddleware, asyncHandler(AIController.improveBio));
+router.post('/generate-services', aiRateLimit, asyncHandler(AIController.generateServices));
+router.post('/generate-business-content', aiRateLimit, asyncHandler(AIController.generateBusinessContent));
 
 export { router as aiRouter };

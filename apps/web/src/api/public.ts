@@ -1,4 +1,5 @@
 import { client } from './client';
+import type { ServiceItem, CustomLink, BusinessHour, GalleryItem } from './card';
 
 export interface PublicCardData {
   username: string;
@@ -8,7 +9,7 @@ export interface PublicCardData {
   location: string;
   bio: string;
   avatarUrl: string | null;
-  theme: 'minimal' | 'bold' | 'glass';
+  theme: 'minimal' | 'bold' | 'glass' | 'neon' | 'sunset' | 'ocean';
   socialLinks: {
     twitter?: string;
     linkedin?: string;
@@ -19,6 +20,11 @@ export interface PublicCardData {
     phone?: string;
   };
   isPro: boolean;
+  cardType: 'personal' | 'business';
+  services: ServiceItem[];
+  customLinks: CustomLink[];
+  businessHours: BusinessHour[];
+  gallery: GalleryItem[];
 }
 
 export const publicApi = {

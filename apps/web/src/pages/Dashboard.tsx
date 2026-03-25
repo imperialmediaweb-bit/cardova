@@ -163,6 +163,11 @@ export default function Dashboard() {
                 socialLinks={displayCard.socialLinks}
                 isPro={user?.isPro}
                 username={displayCard.username}
+                cardType={displayCard.cardType}
+                services={displayCard.services}
+                customLinks={displayCard.customLinks}
+                businessHours={displayCard.businessHours}
+                gallery={displayCard.gallery}
               />
             </div>
           </div>

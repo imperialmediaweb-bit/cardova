@@ -88,7 +88,99 @@ export class AIService {
     return { bio, provider };
   }
 
+  static async generateServices(
+    userId: string,
+    businessName: string,
+    industry: string,
+    description: string,
+    provider: LLMProvider = 'openai',
+  ) {
+    await AIService.checkCredits(userId);
+
+    const result = await generateWithLLM(provider, {
+      messages: [
+        {
+          role: 'system',
+          content: `You are a business consultant helping create service listings for a digital business card. Generate 4-6 services that this business would offer. Return a JSON array of objects with: name (service name, max 60 chars), description (1 sentence, max 150 chars), price (realistic price or price range like "$50-100" or "From $199" or "Free consultation"). Return ONLY valid JSON array, no markdown.`,
+        },
+        {
+          role: 'user',
+          content: `Business: ${businessName}. Industry: ${industry}. Description: ${description}`,
+        },
+      ],
+      maxTokens: 800,
+      temperature: 0.7,
+    });
+
+    await prisma.user.update({
+      where: { id: userId },
+      data: { aiCreditsUsed: { increment: 1 } },
+    });
+
+    try {
+      const services = JSON.parse(result);
+      return { services, provider };
+    } catch {
+      throw new AppError('AI returned invalid format. Please try again.', 500);
+    }
+  }
+
+  static async generateBusinessContent(
+    userId: string,
+    businessName: string,
+    industry: string,
+    location: string,
+    provider: LLMProvider = 'openai',
+  ) {
+    await AIService.checkCredits(userId);
+
+    const result = await generateWithLLM(provider, {
+      messages: [
+        {
+          role: 'system',
+          content: `You are a business branding expert. Generate complete business card content. Return a JSON object with:
+- bio: string (2-3 sentences about the business, first person plural "we", max 300 chars)
+- services: array of {name, description, price} (4-6 services, realistic)
+- businessHours: array of {day, open, close, closed} for Mon-Sun (realistic for the industry)
+- customLinks: array of {title, url, icon} (3-4 relevant links like "Book Appointment", "Menu", "Portfolio" etc. Use placeholder URLs like https://example.com/book)
+
+Icons for customLinks can be: link, calendar, menu, shopping-bag, camera, file-text, map, star
+Return ONLY valid JSON, no markdown.`,
+        },
+        {
+          role: 'user',
+          content: `Business: ${businessName}. Industry: ${industry}. Location: ${location || 'Not specified'}`,
+        },
+      ],
+      maxTokens: 1500,
+      temperature: 0.7,
+    });
+
+    await prisma.user.update({
+      where: { id: userId },
+      data: { aiCreditsUsed: { increment: 1 } },
+    });
+
+    try {
+      const content = JSON.parse(result);
+      return { content, provider };
+    } catch {
+      throw new AppError('AI returned invalid format. Please try again.', 500);
+    }
+  }
+
   static getProviders() {
     return getAvailableProviders();
+  }
+
+  private static async checkCredits(userId: string) {
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+    if (!user) throw new AppError('User not found', 404);
+    if (!user.isPro && user.aiCreditsUsed >= FREE_AI_CREDITS) {
+      throw new AppError(
+        `You've used all ${FREE_AI_CREDITS} free AI credits. Upgrade to Pro for unlimited AI generation.`,
+        403,
+      );
+    }
   }
 }

@@ -57,6 +57,11 @@ export class CardService {
         ...(data.theme !== undefined && { theme: data.theme }),
         ...(data.isPublished !== undefined && { isPublished: data.isPublished }),
         ...(data.socialLinks !== undefined && { socialLinks: data.socialLinks }),
+        ...(data.cardType !== undefined && { cardType: data.cardType }),
+        ...(data.services !== undefined && { services: data.services }),
+        ...(data.customLinks !== undefined && { customLinks: data.customLinks }),
+        ...(data.businessHours !== undefined && { businessHours: data.businessHours }),
+        ...(data.gallery !== undefined && { gallery: data.gallery }),
       },
     });
 

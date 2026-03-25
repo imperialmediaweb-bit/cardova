@@ -47,6 +47,11 @@ export class PublicController {
         theme: card.theme,
         socialLinks: card.socialLinks,
         isPro: card.user.isPro,
+        cardType: card.cardType,
+        services: card.services,
+        customLinks: card.customLinks,
+        businessHours: card.businessHours,
+        gallery: card.gallery,
       },
     });
   }
