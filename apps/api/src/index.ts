@@ -10,6 +10,12 @@ async function seedDemoAccounts() {
     const password = await bcrypt.hash('Demo123!', 12);
     const adminPassword = await bcrypt.hash('Admin123!', 12);
 
+    // Clean up old demo user (demo@cardova.app) that conflicts with new usernames
+    const oldDemo = await prisma.user.findUnique({ where: { email: 'demo@cardova.app' } });
+    if (oldDemo) {
+      await prisma.user.delete({ where: { id: oldDemo.id } }).catch(() => {});
+    }
+
     // Admin
     const admin = await prisma.user.upsert({
       where: { email: 'admin@cardova.app' },
