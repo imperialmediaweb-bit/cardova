@@ -8,6 +8,7 @@ export interface AuthUser {
   email: string;
   isPro: boolean;
   aiCreditsUsed: number;
+  role: string;
 }
 
 declare global {
@@ -36,7 +37,7 @@ export const authMiddleware = async (
 
   const user = await prisma.user.findUnique({
     where: { id: payload.userId },
-    select: { id: true, email: true, isPro: true, aiCreditsUsed: true },
+    select: { id: true, email: true, isPro: true, aiCreditsUsed: true, role: true },
   });
 
   if (!user) {
@@ -48,6 +49,7 @@ export const authMiddleware = async (
     email: user.email,
     isPro: user.isPro,
     aiCreditsUsed: user.aiCreditsUsed,
+    role: user.role,
   };
 
   next();

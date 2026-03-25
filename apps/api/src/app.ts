@@ -4,6 +4,7 @@ import helmet from 'helmet';
 import morgan from 'morgan';
 import compression from 'compression';
 import cookieParser from 'cookie-parser';
+import rateLimit from 'express-rate-limit';
 import path from 'path';
 import { env } from './config/env';
 import { errorHandler } from './middleware/errorHandler';
@@ -13,6 +14,8 @@ import { aiRouter } from './modules/ai/ai.router';
 import { stripeRouter } from './modules/stripe/stripe.router';
 import { analyticsRouter } from './modules/analytics/analytics.router';
 import { publicRouter } from './modules/public/public.router';
+import { settingsRouter } from './modules/settings/settings.router';
+import { adminRouter } from './modules/admin/admin.router';
 
 const app = express();
 
@@ -25,13 +28,31 @@ app.use(cors({
   credentials: true,
 }));
 
+// Global rate limiting
+const globalLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 500, // 500 requests per 15 min
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { success: false, message: 'Too many requests, please try again later.' },
+});
+app.use('/api', globalLimiter);
+
+// Auth rate limiting (stricter)
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 20, // 20 auth attempts per 15 min
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { success: false, message: 'Too many attempts, please try again later.' },
+});
+
 // Logging
 if (env.NODE_ENV !== 'test') {
   app.use(morgan(env.NODE_ENV === 'production' ? 'combined' : 'dev'));
 }
 
 // Body parsing — stripe webhook needs raw body, so it handles its own parsing in its router
-// All other routes use JSON
 app.use((req, res, next) => {
   if (req.originalUrl === '/api/stripe/webhook') {
     next();
@@ -43,7 +64,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(compression());
 
-// Static files (for locally stored avatars)
+// Static files (for locally stored avatars/gallery)
 if (!env.CLOUDINARY_URL) {
   app.use('/uploads', express.static(path.join(env.STORAGE_PATH)));
 }
@@ -54,12 +75,14 @@ app.get('/api/health', (_req, res) => {
 });
 
 // API routes
-app.use('/api/auth', authRouter);
+app.use('/api/auth', authLimiter, authRouter);
 app.use('/api/card', cardRouter);
 app.use('/api/ai', aiRouter);
 app.use('/api/stripe', stripeRouter);
 app.use('/api/analytics', analyticsRouter);
 app.use('/api/public', publicRouter);
+app.use('/api/settings', settingsRouter);
+app.use('/api/admin', adminRouter);
 
 // Serve frontend static files in production
 if (env.NODE_ENV === 'production') {

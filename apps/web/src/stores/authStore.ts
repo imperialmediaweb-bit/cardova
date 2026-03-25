@@ -5,6 +5,7 @@ interface User {
   id: string;
   email: string;
   name: string;
+  role: string;
   isPro: boolean;
   aiCreditsUsed: number;
   createdAt: string;

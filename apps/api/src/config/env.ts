@@ -17,6 +17,7 @@ const envSchema = z.object({
   STRIPE_LIFETIME_PRICE_ID: z.string().optional(),
   CLOUDINARY_URL: z.string().optional(),
   STORAGE_PATH: z.string().default('/data/uploads'),
+  RESEND_API_KEY: z.string().optional(),
   SMTP_HOST: z.string().optional(),
   SMTP_PORT: z.coerce.number().default(587),
   SMTP_USER: z.string().optional(),

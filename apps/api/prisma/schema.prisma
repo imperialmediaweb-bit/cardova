@@ -16,6 +16,7 @@ model User {
   verifyToken      String?
   resetToken       String?
   resetTokenExpiry DateTime?
+  role             String    @default("user")
   isPro            Boolean   @default(false)
   aiCreditsUsed    Int       @default(0)
   stripeCustomerId String?

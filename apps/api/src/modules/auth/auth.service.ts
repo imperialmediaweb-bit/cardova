@@ -3,7 +3,7 @@ import crypto from 'crypto';
 import { prisma } from '../../config/prisma';
 import { signAccessToken, signRefreshToken } from '../../utils/jwt';
 import { emailQueue } from '../../jobs/emailQueue';
-import { sendVerificationEmail, sendPasswordResetEmail } from '../../utils/email';
+import { sendVerificationEmail, sendPasswordResetEmail, sendWelcomeEmail } from '../../utils/email';
 import { AppError } from '../../middleware/errorHandler';
 import { RegisterInput, LoginInput } from './auth.schema';
 
@@ -49,6 +49,9 @@ export class AuthService {
       data: { emailVerified: true, verifyToken: null },
     });
 
+    // Send welcome email (fire and forget)
+    sendWelcomeEmail(user.email, user.name).catch(() => {});
+
     return { message: 'Email verified successfully. You can now log in.' };
   }
 
@@ -89,6 +92,7 @@ export class AuthService {
         id: user.id,
         email: user.email,
         name: user.name,
+        role: user.role,
         isPro: user.isPro,
         aiCreditsUsed: user.aiCreditsUsed,
         createdAt: user.createdAt.toISOString(),
@@ -134,6 +138,7 @@ export class AuthService {
         id: storedToken.user.id,
         email: storedToken.user.email,
         name: storedToken.user.name,
+        role: storedToken.user.role,
         isPro: storedToken.user.isPro,
         aiCreditsUsed: storedToken.user.aiCreditsUsed,
         createdAt: storedToken.user.createdAt.toISOString(),
@@ -207,6 +212,7 @@ export class AuthService {
         id: true,
         email: true,
         name: true,
+        role: true,
         isPro: true,
         aiCreditsUsed: true,
         createdAt: true,

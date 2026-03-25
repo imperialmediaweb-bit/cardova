@@ -542,6 +542,8 @@ export default function Landing() {
               <a href="#pricing" className="hover:text-zinc-300 transition-colors">Pricing</a>
               <Link to="/register" className="hover:text-zinc-300 transition-colors">Sign Up</Link>
               <Link to="/login" className="hover:text-zinc-300 transition-colors">Log In</Link>
+              <Link to="/terms" className="hover:text-zinc-300 transition-colors">Terms</Link>
+              <Link to="/privacy" className="hover:text-zinc-300 transition-colors">Privacy</Link>
             </div>
             <p className="text-xs text-zinc-600">
               &copy; {new Date().getFullYear()} Cardova. All rights reserved.

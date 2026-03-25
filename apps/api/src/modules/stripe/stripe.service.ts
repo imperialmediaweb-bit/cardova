@@ -3,6 +3,7 @@ import { stripe } from '../../config/stripe';
 import { prisma } from '../../config/prisma';
 import { env } from '../../config/env';
 import { AppError } from '../../middleware/errorHandler';
+import { sendProUpgradeEmail } from '../../utils/email';
 
 export class StripeService {
   static async createCheckout(userId: string, plan: 'monthly' | 'lifetime') {
@@ -60,7 +61,7 @@ export class StripeService {
         const userId = session.metadata?.userId;
         if (!userId) break;
 
-        await prisma.user.update({
+        const updatedUser = await prisma.user.update({
           where: { id: userId },
           data: { isPro: true },
         });
@@ -73,6 +74,9 @@ export class StripeService {
             type: session.metadata?.plan === 'monthly' ? 'MONTHLY' : 'LIFETIME',
           },
         });
+
+        // Send pro upgrade email (fire and forget)
+        sendProUpgradeEmail(updatedUser.email, updatedUser.name).catch(() => {});
         break;
       }
       case 'customer.subscription.deleted': {
