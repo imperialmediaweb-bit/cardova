@@ -13,7 +13,7 @@ const serviceSchema = z.object({
 const customLinkSchema = z.object({
   id: z.string(),
   title: z.string().max(100),
-  url: z.string().max(500),
+  url: z.string().max(500).regex(/^https?:\/\//, 'URL must start with http:// or https://'),
   icon: z.string().max(50).optional().default('link'),
 });
 

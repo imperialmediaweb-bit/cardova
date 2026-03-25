@@ -69,6 +69,12 @@ export class AuthController {
     res.json({ success: true, message: 'Logged out successfully' });
   }
 
+  static async resendVerification(req: Request, res: Response) {
+    const { email } = forgotPasswordSchema.parse(req.body); // reuse email-only schema
+    const result = await AuthService.resendVerification(email);
+    res.json({ success: true, ...result });
+  }
+
   static async forgotPassword(req: Request, res: Response) {
     const { email } = forgotPasswordSchema.parse(req.body);
     const result = await AuthService.forgotPassword(email);

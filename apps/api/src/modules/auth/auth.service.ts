@@ -44,6 +44,10 @@ export class AuthService {
       throw new AppError('Invalid verification token', 400);
     }
 
+    if (user.emailVerified) {
+      return { message: 'Email is already verified.' };
+    }
+
     await prisma.user.update({
       where: { id: user.id },
       data: { emailVerified: true, verifyToken: null },
@@ -203,6 +207,28 @@ export class AuthService {
     await prisma.refreshToken.deleteMany({ where: { userId: user.id } });
 
     return { message: 'Password reset successfully. You can now log in.' };
+  }
+
+  static async resendVerification(email: string) {
+    const user = await prisma.user.findUnique({ where: { email } });
+    // Always return success to prevent email enumeration
+    if (!user || user.emailVerified) {
+      return { message: 'If that email exists and is unverified, a new verification link has been sent.' };
+    }
+
+    const verifyToken = crypto.randomBytes(32).toString('hex');
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { verifyToken },
+    });
+
+    if (emailQueue) {
+      await emailQueue.add({ type: 'verify', email: user.email, token: verifyToken });
+    } else {
+      await sendVerificationEmail(user.email, verifyToken);
+    }
+
+    return { message: 'If that email exists and is unverified, a new verification link has been sent.' };
   }
 
   static async getMe(userId: string) {

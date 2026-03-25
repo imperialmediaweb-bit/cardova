@@ -176,7 +176,8 @@ export default function Admin() {
                           <div className="flex items-center justify-end gap-1">
                             <button
                               onClick={() => toggleProMutation.mutate({ userId: u.id, isPro: !u.isPro })}
-                              className={`px-2 py-1 rounded text-xs font-medium transition-colors ${
+                              disabled={toggleProMutation.isPending}
+                              className={`px-2 py-1 rounded text-xs font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
                                 u.isPro
                                   ? 'bg-brand-500/20 text-brand-400 hover:bg-brand-500/30'
                                   : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700'
@@ -190,7 +191,8 @@ export default function Admin() {
                                 userId: u.id,
                                 role: u.role === 'admin' ? 'user' : 'admin',
                               })}
-                              className={`px-2 py-1 rounded text-xs font-medium transition-colors ${
+                              disabled={toggleRoleMutation.isPending}
+                              className={`px-2 py-1 rounded text-xs font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
                                 u.role === 'admin'
                                   ? 'bg-red-500/20 text-red-400 hover:bg-red-500/30'
                                   : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700'
@@ -206,7 +208,8 @@ export default function Admin() {
                                     deleteMutation.mutate(u.id);
                                   }
                                 }}
-                                className="px-2 py-1 rounded text-xs font-medium bg-zinc-800 text-zinc-400 hover:bg-red-950 hover:text-red-400 transition-colors"
+                                disabled={deleteMutation.isPending}
+                                className="px-2 py-1 rounded text-xs font-medium bg-zinc-800 text-zinc-400 hover:bg-red-950 hover:text-red-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                                 title="Delete User"
                               >
                                 <Trash2 className="w-3.5 h-3.5" />

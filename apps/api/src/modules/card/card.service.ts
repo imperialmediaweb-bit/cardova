@@ -40,6 +40,15 @@ export class CardService {
     const card = await prisma.card.findUnique({ where: { userId } });
     if (!card) throw new AppError('Card not found', 404);
 
+    // Enforce Pro-only themes
+    const proThemes = ['neon', 'sunset', 'ocean'];
+    if (data.theme && proThemes.includes(data.theme)) {
+      const user = await prisma.user.findUnique({ where: { id: userId } });
+      if (!user?.isPro) {
+        throw new AppError('This theme requires a Pro plan', 403);
+      }
+    }
+
     if (data.username && data.username !== card.username) {
       const existing = await prisma.card.findUnique({ where: { username: data.username } });
       if (existing) throw new AppError('Username already taken', 409);

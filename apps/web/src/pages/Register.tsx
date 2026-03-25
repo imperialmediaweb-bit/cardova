@@ -101,6 +101,7 @@ export default function Register() {
               onChange={(e) => setPassword(e.target.value)}
               placeholder="Min. 8 characters"
               error={errors.password}
+              helperText="Min 8 characters, 1 uppercase, 1 number"
               required
               minLength={8}
             />

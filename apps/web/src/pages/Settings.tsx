@@ -55,9 +55,11 @@ export default function Settings() {
       setCurrentPassword('');
       setNewPassword('');
       setConfirmPassword('');
-      toast.success('Password changed. Please log in again.');
-      logout();
-      navigate('/login');
+      toast.success('Password changed. You will be logged out shortly.');
+      setTimeout(() => {
+        logout();
+        navigate('/login');
+      }, 1500);
     } catch (err: any) {
       toast.error(err.response?.data?.message || 'Failed to change password');
     } finally {

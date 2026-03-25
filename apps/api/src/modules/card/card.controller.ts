@@ -57,7 +57,11 @@ export class CardController {
       const filename = `${req.user!.userId}${ext}`;
       const filepath = path.join(uploadDir, filename);
 
-      fs.writeFileSync(filepath, req.file.buffer);
+      try {
+        fs.writeFileSync(filepath, req.file.buffer);
+      } catch (err) {
+        return res.status(500).json({ success: false, message: 'Failed to save avatar file' });
+      }
       avatarUrl = `/uploads/avatars/${filename}`;
     }
 
@@ -103,7 +107,11 @@ export class CardController {
       const filename = `${req.user!.userId}-${Date.now()}${ext}`;
       const filepath = path.join(uploadDir, filename);
 
-      fs.writeFileSync(filepath, req.file.buffer);
+      try {
+        fs.writeFileSync(filepath, req.file.buffer);
+      } catch (err) {
+        return res.status(500).json({ success: false, message: 'Failed to save gallery image' });
+      }
       imageUrl = `/uploads/gallery/${filename}`;
     }
 

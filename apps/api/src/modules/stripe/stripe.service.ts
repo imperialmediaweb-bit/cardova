@@ -79,6 +79,37 @@ export class StripeService {
         sendProUpgradeEmail(updatedUser.email, updatedUser.name).catch(() => {});
         break;
       }
+      case 'invoice.payment_failed': {
+        const invoice = event.data.object as Stripe.Invoice;
+        const failedCustomerId = invoice.customer as string;
+
+        const failedUser = await prisma.user.findFirst({
+          where: { stripeCustomerId: failedCustomerId },
+        });
+
+        if (failedUser) {
+          // Log the failure; in production, send a notification email
+          console.error(`Payment failed for user ${failedUser.id} (${failedUser.email})`);
+        }
+        break;
+      }
+      case 'customer.subscription.updated': {
+        const updatedSub = event.data.object as Stripe.Subscription;
+        const updatedCustomerId = updatedSub.customer as string;
+
+        const subUser = await prisma.user.findFirst({
+          where: { stripeCustomerId: updatedCustomerId },
+        });
+
+        if (subUser) {
+          const isActive = updatedSub.status === 'active' || updatedSub.status === 'trialing';
+          await prisma.user.update({
+            where: { id: subUser.id },
+            data: { isPro: isActive },
+          });
+        }
+        break;
+      }
       case 'customer.subscription.deleted': {
         const subscription = event.data.object as Stripe.Subscription;
         const customerId = subscription.customer as string;

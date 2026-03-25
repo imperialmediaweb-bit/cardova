@@ -2,6 +2,7 @@ import { useParams, Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { useQuery } from '@tanstack/react-query';
 import { Download, Share2, Twitter, Linkedin, Github, Instagram, Globe, Mail, Phone, MapPin, Clock, ExternalLink, Briefcase, Code, Palette, Camera, Wrench, Heart, BookOpen, ShoppingBag, Link as LinkIcon, Calendar, FileText, Map, Star, Menu } from 'lucide-react';
+import toast from 'react-hot-toast';
 import Spinner from '../components/ui/Spinner';
 import Button from '../components/ui/Button';
 import { publicApi, PublicCardData } from '../api/public';
@@ -91,7 +92,7 @@ export default function PublicCard() {
       }
     } else {
       await navigator.clipboard.writeText(url);
-      alert('Link copied to clipboard!');
+      toast.success('Link copied!');
     }
   };
 

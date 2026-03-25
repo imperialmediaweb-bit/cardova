@@ -16,6 +16,7 @@ async function main() {
       password: adminPassword,
       name: 'Cardova Admin',
       emailVerified: true,
+      role: 'admin',
       isPro: true,
       aiCreditsUsed: 0,
     },

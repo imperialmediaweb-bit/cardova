@@ -1,6 +1,8 @@
 import bcrypt from 'bcryptjs';
+import crypto from 'crypto';
 import { prisma } from '../../config/prisma';
 import { AppError } from '../../middleware/errorHandler';
+import { sendVerificationEmail } from '../../utils/email';
 import { UpdateProfileInput, ChangePasswordInput } from './settings.schema';
 
 const SALT_ROUNDS = 12;
@@ -15,11 +17,18 @@ export class SettingsService {
       if (existing) throw new AppError('Email already in use', 409);
     }
 
+    const emailChanged = data.email && data.email !== user.email;
+    let verifyToken: string | undefined;
+    if (emailChanged) {
+      verifyToken = crypto.randomBytes(32).toString('hex');
+    }
+
     const updated = await prisma.user.update({
       where: { id: userId },
       data: {
         ...(data.name !== undefined && { name: data.name }),
         ...(data.email !== undefined && { email: data.email }),
+        ...(emailChanged && { emailVerified: false, verifyToken }),
       },
       select: {
         id: true,
@@ -30,6 +39,10 @@ export class SettingsService {
         createdAt: true,
       },
     });
+
+    if (emailChanged && verifyToken) {
+      sendVerificationEmail(updated.email, verifyToken).catch(() => {});
+    }
 
     return { ...updated, createdAt: updated.createdAt.toISOString() };
   }

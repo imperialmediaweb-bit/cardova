@@ -66,14 +66,18 @@ model CardView {
   card     Card     @relation(fields: [cardId], references: [id], onDelete: Cascade)
   referrer String   @default("")
   viewedAt DateTime @default(now())
+
+  @@index([cardId])
 }
 
 model Payment {
   id              String   @id @default(cuid())
   userId          String
-  user            User     @relation(fields: [userId], references: [id])
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   stripeSessionId String   @unique
   amount          Int
   type            String
   createdAt       DateTime @default(now())
+
+  @@index([userId])
 }

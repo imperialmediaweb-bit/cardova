@@ -24,7 +24,7 @@ app.use(helmet({
   contentSecurityPolicy: env.NODE_ENV === 'production' ? false : undefined,
 }));
 app.use(cors({
-  origin: env.NODE_ENV === 'production' ? true : env.CLIENT_URL,
+  origin: env.CLIENT_URL,
   credentials: true,
 }));
 
