@@ -87,6 +87,33 @@ export default function Login() {
             </Button>
           </form>
 
+          {/* Demo Accounts */}
+          <div className="mt-6 p-4 bg-zinc-900/50 border border-zinc-800 rounded-xl space-y-2">
+            <p className="text-[11px] text-zinc-600 uppercase tracking-wider font-medium mb-3">Try a demo account</p>
+            {[
+              { emoji: '👩', label: 'Personal Card', sublabel: 'Free tier — Sarah Chen', email: 'sarah@demo.cardova.app', password: 'Demo123!', badge: 'Free', badgeColor: 'text-zinc-400 bg-zinc-800' },
+              { emoji: '🍝', label: 'Bella Cucina', sublabel: 'Restaurant business card', email: 'bella@demo.cardova.app', password: 'Demo123!', badge: 'Pro', badgeColor: 'text-brand-400 bg-brand-500/10' },
+              { emoji: '🚀', label: 'Luminous Digital', sublabel: 'Agency business card', email: 'luminous@demo.cardova.app', password: 'Demo123!', badge: 'Pro', badgeColor: 'text-brand-400 bg-brand-500/10' },
+            ].map((account) => (
+              <button
+                key={account.email}
+                type="button"
+                onClick={() => { setEmail(account.email); setPassword(account.password); }}
+                className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-zinc-800/50 transition-colors text-left group"
+              >
+                <span className="text-lg">{account.emoji}</span>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <p className="text-sm font-medium text-zinc-300 group-hover:text-zinc-100 transition-colors">{account.label}</p>
+                    <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${account.badgeColor}`}>{account.badge}</span>
+                  </div>
+                  <p className="text-[11px] text-zinc-600">{account.sublabel}</p>
+                </div>
+                <span className="text-[10px] text-zinc-700 group-hover:text-brand-400 transition-colors font-medium">click to fill</span>
+              </button>
+            ))}
+          </div>
+
           <p className="text-center text-sm text-zinc-400 mt-6">
             Don't have an account?{' '}
             <Link to="/register" className="text-brand-400 hover:text-brand-300 font-medium">
