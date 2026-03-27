@@ -1,0 +1,130 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id               String    @id @default(cuid())
+  email            String    @unique
+  password         String
+  name             String
+  emailVerified    Boolean   @default(false)
+  verifyToken      String?
+  resetToken       String?
+  resetTokenExpiry DateTime?
+  role             String    @default("user")
+  isPro            Boolean   @default(false)
+  aiCreditsUsed    Int       @default(0)
+  stripeCustomerId String?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+  card             Card?
+  payments         Payment[]
+  refreshTokens    RefreshToken[]
+  teamId           String?
+  team             Team?     @relation("TeamMembers", fields: [teamId], references: [id])
+  ownedTeam        Team?     @relation("TeamOwner")
+}
+
+model RefreshToken {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+}
+
+model Card {
+  id            String   @id @default(cuid())
+  userId        String   @unique
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  username      String   @unique
+  displayName   String
+  title         String   @default("")
+  company       String   @default("")
+  location      String   @default("")
+  bio           String   @default("")
+  avatarUrl     String?
+  theme         String   @default("minimal")
+  isPublished   Boolean  @default(true)
+  socialLinks   Json     @default("{}")
+  cardType      String   @default("personal")
+  services      Json     @default("[]")
+  customLinks   Json     @default("[]")
+  businessHours Json     @default("[]")
+  gallery       Json     @default("[]")
+  customDomain  String?
+  domainVerified Boolean @default(false)
+  webhookUrl    String?
+  webhookEvents Json     @default("[]")
+  leadFormEnabled Boolean @default(false)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  views         CardView[]
+  leads         Lead[]
+}
+
+model CardView {
+  id       String   @id @default(cuid())
+  cardId   String
+  card     Card     @relation(fields: [cardId], references: [id], onDelete: Cascade)
+  referrer String   @default("")
+  viewedAt DateTime @default(now())
+
+  @@index([cardId])
+}
+
+model Lead {
+  id        String   @id @default(cuid())
+  cardId    String
+  card      Card     @relation(fields: [cardId], references: [id], onDelete: Cascade)
+  name      String
+  email     String
+  phone     String   @default("")
+  message   String   @default("")
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([cardId])
+}
+
+model Payment {
+  id              String   @id @default(cuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  stripeSessionId String   @unique
+  amount          Int
+  type            String
+  createdAt       DateTime @default(now())
+
+  @@index([userId])
+}
+
+model Team {
+  id        String   @id @default(cuid())
+  name      String
+  ownerId   String   @unique
+  owner     User     @relation("TeamOwner", fields: [ownerId], references: [id])
+  members   User[]   @relation("TeamMembers")
+  maxCards  Int      @default(5)
+  plan      String   @default("team")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model WhiteLabel {
+  id          String  @id @default(cuid())
+  domain      String  @unique
+  brandName   String
+  logoUrl     String?
+  primaryColor String @default("#6366f1")
+  ownerId     String
+  isActive    Boolean @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
