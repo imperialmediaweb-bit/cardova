@@ -316,11 +316,20 @@ export default function PublicCard() {
               {/* Contact Button */}
               {(card.socialLinks?.email || card.socialLinks?.phone) && (
                 <a
-                  href={card.socialLinks.email ? `mailto:${card.socialLinks.email}` : `tel:${card.socialLinks.phone}`}
+                  href={card.socialLinks.phone ? `tel:${card.socialLinks.phone}` : `mailto:${card.socialLinks.email}`}
                   className={`mt-6 w-full inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-semibold text-sm transition-colors ${t.contactBtn}`}
                 >
+                  {card.socialLinks.phone ? <Phone className="w-4 h-4" /> : <Mail className="w-4 h-4" />}
+                  {card.socialLinks.phone ? 'Call Me' : 'Contact Me'}
+                </a>
+              )}
+              {card.socialLinks?.phone && card.socialLinks?.email && (
+                <a
+                  href={`mailto:${card.socialLinks.email}`}
+                  className={`mt-2 w-full inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl text-sm transition-colors ${t.actionBtn}`}
+                >
                   <Mail className="w-4 h-4" />
-                  Contact Me
+                  Send Email
                 </a>
               )}
             </div>

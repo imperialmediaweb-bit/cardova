@@ -13,6 +13,7 @@ import Admin from './pages/Admin';
 import Leads from './pages/Leads';
 import Terms from './pages/Terms';
 import Privacy from './pages/Privacy';
+import Directory from './pages/Directory';
 import PublicCard from './pages/PublicCard';
 import NotFound from './pages/NotFound';
 import ProtectedRoute from './components/layout/ProtectedRoute';
@@ -86,6 +87,7 @@ function App() {
           </AdminRoute>
         }
       />
+      <Route path="/directory" element={<Directory />} />
       <Route path="/:username" element={<PublicCard />} />
       <Route path="*" element={<NotFound />} />
     </Routes>

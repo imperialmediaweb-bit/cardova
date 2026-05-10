@@ -540,6 +540,7 @@ export default function Landing() {
             <div className="flex gap-6 text-sm text-zinc-500">
               <Link to="/" className="hover:text-zinc-300 transition-colors">Home</Link>
               <a href="#pricing" className="hover:text-zinc-300 transition-colors">Pricing</a>
+              <Link to="/directory" className="hover:text-zinc-300 transition-colors">Directory</Link>
               <Link to="/register" className="hover:text-zinc-300 transition-colors">Sign Up</Link>
               <Link to="/login" className="hover:text-zinc-300 transition-colors">Log In</Link>
               <Link to="/terms" className="hover:text-zinc-300 transition-colors">Terms</Link>

@@ -19,6 +19,7 @@ import { adminRouter } from './modules/admin/admin.router';
 import { leadsRouter } from './modules/leads/leads.router';
 import { teamRouter } from './modules/team/team.router';
 import { whiteLabelRouter } from './modules/whitelabel/whitelabel.router';
+import { directoryRouter } from './modules/directory/directory.router';
 
 const app = express();
 
@@ -87,6 +88,7 @@ app.use('/api/public', publicRouter);
 app.use('/api/settings', settingsRouter);
 app.use('/api/admin', adminRouter);
 app.use('/api/leads', leadsRouter);
+app.use('/api/directory', directoryRouter);
 app.use('/api/team', teamRouter);
 app.use('/api/whitelabel', whiteLabelRouter);
 
