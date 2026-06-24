@@ -1,8 +1,67 @@
+import { z } from 'zod';
 import { generateWithLLM, getAvailableProviders, LLMProvider } from '../../config/llm';
 import { prisma } from '../../config/prisma';
 import { AppError } from '../../middleware/errorHandler';
 
 const FREE_AI_CREDITS = 10;
+
+// Strip markdown code fences that LLMs often wrap JSON in, then parse + validate
+function parseAIJson<T>(raw: string, schema: z.ZodSchema<T>): T {
+  const cleaned = raw.trim().replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '').trim();
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(cleaned);
+  } catch {
+    throw new AppError('AI returned invalid format. Please try again.', 500);
+  }
+  const result = schema.safeParse(parsed);
+  if (!result.success) {
+    throw new AppError('AI returned unexpected data. Please try again.', 500);
+  }
+  return result.data;
+}
+
+const aiServiceSchema = z.array(
+  z.object({
+    name: z.string(),
+    description: z.string().optional().default(''),
+    price: z.string().optional().default(''),
+  }),
+);
+
+const aiBusinessContentSchema = z.object({
+  bio: z.string().optional().default(''),
+  services: aiServiceSchema.optional().default([]),
+  businessHours: z
+    .array(
+      z.object({
+        day: z.string(),
+        open: z.string().optional().default(''),
+        close: z.string().optional().default(''),
+        closed: z.boolean().optional().default(false),
+      }),
+    )
+    .optional()
+    .default([]),
+  customLinks: z
+    .array(
+      z.object({
+        title: z.string(),
+        url: z.string(),
+        icon: z.string().optional().default('link'),
+      }),
+    )
+    .optional()
+    .default([]),
+});
+
+const aiLinkedInSchema = z.object({
+  displayName: z.string().optional().default(''),
+  title: z.string().optional().default(''),
+  company: z.string().optional().default(''),
+  location: z.string().optional().default(''),
+  bio: z.string().optional().default(''),
+});
 
 const toneInstructions: Record<string, string> = {
   professional: 'Use a polished, confident, and professional tone.',
@@ -117,12 +176,8 @@ export class AIService {
       data: { aiCreditsUsed: { increment: 1 } },
     });
 
-    try {
-      const services = JSON.parse(result);
-      return { services, provider };
-    } catch {
-      throw new AppError('AI returned invalid format. Please try again.', 500);
-    }
+    const services = parseAIJson(result, aiServiceSchema);
+    return { services, provider };
   }
 
   static async generateBusinessContent(
@@ -161,12 +216,8 @@ Return ONLY valid JSON, no markdown.`,
       data: { aiCreditsUsed: { increment: 1 } },
     });
 
-    try {
-      const content = JSON.parse(result);
-      return { content, provider };
-    } catch {
-      throw new AppError('AI returned invalid format. Please try again.', 500);
-    }
+    const content = parseAIJson(result, aiBusinessContentSchema);
+    return { content, provider };
   }
 
   static getProviders() {
@@ -184,11 +235,8 @@ Return ONLY valid JSON, no markdown.`,
       temperature: 0.7,
     });
     await prisma.user.update({ where: { id: userId }, data: { aiCreditsUsed: { increment: 1 } } });
-    try {
-      return { content: JSON.parse(result), provider };
-    } catch {
-      throw new AppError('AI returned invalid format. Please try again.', 500);
-    }
+    const content = parseAIJson(result, aiLinkedInSchema);
+    return { content, provider };
   }
 
   private static async checkCredits(userId: string) {

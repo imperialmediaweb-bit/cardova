@@ -48,7 +48,7 @@ export default function Leads() {
             <p className="text-sm text-zinc-500 mt-1">Messages from your card visitors</p>
           </div>
           {statsData && statsData.unread > 0 && (
-            <Button variant="secondary" size="sm" onClick={() => markAllMutation.mutate()} isLoading={markAllMutation.isPending}>
+            <Button variant="secondary" size="sm" onClick={() => { if (window.confirm('Mark all leads as read?')) markAllMutation.mutate(); }} isLoading={markAllMutation.isPending}>
               <CheckCheck className="w-4 h-4 mr-2" />
               Mark all read
             </Button>

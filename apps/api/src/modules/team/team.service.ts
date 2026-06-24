@@ -51,6 +51,10 @@ export class TeamService {
     if (!team) throw new AppError('Team not found', 404);
     if (memberId === ownerId) throw new AppError('Cannot remove yourself', 400);
 
+    // Verify the member actually belongs to THIS team
+    const member = await prisma.user.findFirst({ where: { id: memberId, teamId: team.id } });
+    if (!member) throw new AppError('Member not found in your team', 404);
+
     await prisma.user.update({ where: { id: memberId }, data: { teamId: null } });
     return { message: 'Member removed' };
   }

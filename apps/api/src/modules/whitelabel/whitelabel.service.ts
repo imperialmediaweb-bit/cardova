@@ -3,6 +3,9 @@ import { AppError } from '../../middleware/errorHandler';
 
 export class WhiteLabelService {
   static async create(ownerId: string, data: { domain: string; brandName: string; primaryColor?: string }) {
+    const owner = await prisma.user.findUnique({ where: { id: ownerId } });
+    if (!owner?.isPro) throw new AppError('Pro plan required to use White-Label.', 403);
+
     const existing = await prisma.whiteLabel.findUnique({ where: { domain: data.domain } });
     if (existing) throw new AppError('Domain already registered', 409);
     return prisma.whiteLabel.create({

@@ -58,8 +58,8 @@ export const updateCardSchema = z.object({
   customLinks: z.array(customLinkSchema).max(20).optional(),
   businessHours: z.array(businessHourSchema).max(7).optional(),
   gallery: z.array(galleryItemSchema).max(20).optional(),
-  webhookUrl: z.string().url().max(500).optional().or(z.literal('')),
-  webhookEvents: z.array(z.string()).optional(),
+  webhookUrl: z.string().url().regex(/^https:\/\//, 'Webhook URL must use HTTPS').max(500).optional().or(z.literal('')),
+  webhookEvents: z.array(z.enum(['view.created', 'lead.created', 'card.updated'])).optional(),
   leadFormEnabled: z.boolean().optional(),
   customDomain: z.string().max(200).optional(),
 });

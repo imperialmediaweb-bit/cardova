@@ -22,17 +22,19 @@ export class PublicController {
     // Track view (fire and forget)
     const referrer = (req.headers.referer || req.headers.referrer || '') as string;
     let referrerDomain = '';
-    try {
-      if (referrer) {
+    if (referrer) {
+      try {
         referrerDomain = new URL(referrer).hostname;
+      } catch {
+        referrerDomain = 'unknown';
       }
-    } catch {
-      referrerDomain = referrer;
     }
 
     prisma.cardView.create({
       data: { cardId: card.id, referrer: referrerDomain },
-    }).catch(() => {});
+    }).catch((err) => {
+      console.error('Failed to record card view:', err.message);
+    });
 
     res.json({
       success: true,

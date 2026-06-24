@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { useQuery } from '@tanstack/react-query';
-import { LayoutDashboard, BarChart3, Crown, ExternalLink, Copy, Check, Eye, TrendingUp, Globe, Share2, QrCode, Download, Sparkles, ArrowRight } from 'lucide-react';
+import { LayoutDashboard, BarChart3, Crown, ExternalLink, Copy, Check, Eye, TrendingUp, Globe, Share2, QrCode, Download, Sparkles, ArrowRight, X } from 'lucide-react';
 import Navbar from '../components/layout/Navbar';
 import CardEditor from '../components/card/CardEditor';
 import CardPreview from '../components/card/CardPreview';
@@ -21,6 +21,8 @@ export default function Dashboard() {
   const [activeTab, setActiveTab] = useState<'editor' | 'analytics'>('editor');
   const [cardForm, setCardForm] = useState<CardData | null>(null);
   const [copied, setCopied] = useState(false);
+  const [downloading, setDownloading] = useState<string | null>(null);
+  const [showWelcome, setShowWelcome] = useState(true);
 
   const { data: cardData, isLoading: cardLoading, error: cardError } = useQuery({
     queryKey: ['card'],
@@ -74,6 +76,7 @@ export default function Dashboard() {
   };
 
   const handleDownloadQR = async () => {
+    setDownloading('qr');
     try {
       const res = await cardApi.getQRCode();
       const url = URL.createObjectURL(res.data);
@@ -84,10 +87,13 @@ export default function Dashboard() {
       URL.revokeObjectURL(url);
     } catch {
       toast.error('Failed to download QR code');
+    } finally {
+      setDownloading(null);
     }
   };
 
   const handleDownloadVCF = async () => {
+    setDownloading('vcf');
     try {
       const res = await cardApi.getVCF();
       const url = URL.createObjectURL(res.data);
@@ -98,6 +104,8 @@ export default function Dashboard() {
       URL.revokeObjectURL(url);
     } catch {
       toast.error('Failed to download vCard');
+    } finally {
+      setDownloading(null);
     }
   };
 
@@ -187,16 +195,18 @@ export default function Dashboard() {
                 </button>
                 <button
                   onClick={handleDownloadQR}
-                  className="flex items-center gap-2 px-3 py-2 bg-zinc-900 border border-zinc-800 rounded-lg text-sm text-zinc-300 hover:bg-zinc-800 hover:text-zinc-100 transition-colors"
+                  disabled={downloading === 'qr'}
+                  className="flex items-center gap-2 px-3 py-2 bg-zinc-900 border border-zinc-800 rounded-lg text-sm text-zinc-300 hover:bg-zinc-800 hover:text-zinc-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  <QrCode className="w-4 h-4" />
+                  <QrCode className={`w-4 h-4 ${downloading === 'qr' ? 'animate-pulse' : ''}`} />
                   <span className="hidden sm:inline">QR</span>
                 </button>
                 <button
                   onClick={handleDownloadVCF}
-                  className="flex items-center gap-2 px-3 py-2 bg-zinc-900 border border-zinc-800 rounded-lg text-sm text-zinc-300 hover:bg-zinc-800 hover:text-zinc-100 transition-colors"
+                  disabled={downloading === 'vcf'}
+                  className="flex items-center gap-2 px-3 py-2 bg-zinc-900 border border-zinc-800 rounded-lg text-sm text-zinc-300 hover:bg-zinc-800 hover:text-zinc-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  <Download className="w-4 h-4" />
+                  <Download className={`w-4 h-4 ${downloading === 'vcf' ? 'animate-pulse' : ''}`} />
                   <span className="hidden sm:inline">vCard</span>
                 </button>
               </div>
@@ -253,6 +263,22 @@ export default function Dashboard() {
                 </div>
               )}
             </div>
+          </div>
+        )}
+
+        {/* Welcome / Onboarding Banner */}
+        {showWelcome && displayCard && !displayCard.bio && Object.keys(displayCard.socialLinks || {}).length === 0 && (
+          <div className="flex items-start gap-3 mb-6 p-4 bg-gradient-to-br from-brand-500/10 to-purple-500/10 border border-brand-500/30 rounded-xl">
+            <p className="flex-1 text-sm text-brand-200">
+              👋 Welcome! Get started: add your bio, pick a theme, add social links, then share your card.
+            </p>
+            <button
+              onClick={() => setShowWelcome(false)}
+              className="p-1 rounded-lg text-brand-300/70 hover:text-brand-200 hover:bg-brand-500/10 transition-colors flex-shrink-0"
+              title="Dismiss"
+            >
+              <X className="w-4 h-4" />
+            </button>
           </div>
         )}
 

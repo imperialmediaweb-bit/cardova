@@ -18,6 +18,7 @@ export class AuthService {
 
     const hashedPassword = await bcrypt.hash(data.password, SALT_ROUNDS);
     const verifyToken = crypto.randomBytes(32).toString('hex');
+    const verifyTokenExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24h
 
     const user = await prisma.user.create({
       data: {
@@ -25,6 +26,7 @@ export class AuthService {
         password: hashedPassword,
         name: data.name,
         verifyToken,
+        verifyTokenExpiry,
       },
     });
 
@@ -48,9 +50,13 @@ export class AuthService {
       return { message: 'Email is already verified.' };
     }
 
+    if (user.verifyTokenExpiry && user.verifyTokenExpiry < new Date()) {
+      throw new AppError('Verification link has expired. Please request a new one.', 400);
+    }
+
     await prisma.user.update({
       where: { id: user.id },
-      data: { emailVerified: true, verifyToken: null },
+      data: { emailVerified: true, verifyToken: null, verifyTokenExpiry: null },
     });
 
     // Send welcome email (fire and forget)
@@ -217,9 +223,10 @@ export class AuthService {
     }
 
     const verifyToken = crypto.randomBytes(32).toString('hex');
+    const verifyTokenExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24h
     await prisma.user.update({
       where: { id: user.id },
-      data: { verifyToken },
+      data: { verifyToken, verifyTokenExpiry },
     });
 
     if (emailQueue) {

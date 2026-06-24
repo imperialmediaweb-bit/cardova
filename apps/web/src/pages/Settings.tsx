@@ -77,6 +77,9 @@ export default function Settings() {
       toast.error('Please type DELETE to confirm');
       return;
     }
+    if (!window.confirm('This will permanently delete your account and all data. This cannot be undone. Continue?')) {
+      return;
+    }
     setDeleting(true);
     try {
       await settingsApi.deleteAccount(deletePassword);

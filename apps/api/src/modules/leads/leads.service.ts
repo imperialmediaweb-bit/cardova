@@ -15,7 +15,9 @@ export class LeadsService {
     if (card.webhookUrl) {
       const events = (card.webhookEvents as string[]) || [];
       if (events.includes('lead.created')) {
-        fireWebhook(card.webhookUrl, 'lead.created', { lead, cardUsername: username }).catch(() => {});
+        fireWebhook(card.webhookUrl, 'lead.created', { lead, cardUsername: username }).catch((err) => {
+          console.error('Lead webhook failed:', err.message);
+        });
       }
     }
     return lead;

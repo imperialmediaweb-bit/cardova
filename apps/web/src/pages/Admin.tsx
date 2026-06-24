@@ -128,6 +128,7 @@ export default function Admin() {
             <div className="py-12"><Spinner size="lg" /></div>
           ) : (
             <>
+              <p className="sm:hidden text-xs text-zinc-600 px-6 py-2">Swipe to see actions →</p>
               <div className="overflow-x-auto">
                 <table className="w-full">
                   <thead>

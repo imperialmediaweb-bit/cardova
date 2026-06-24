@@ -174,7 +174,7 @@ export default function CardEditor({ card, onChange }: CardEditorProps) {
 
   const handleLinkedInImport = async () => {
     const url = prompt('Paste your LinkedIn profile URL:');
-    if (!url || !url.includes('linkedin.com')) { toast.error('Invalid LinkedIn URL'); return; }
+    if (!url || !/linkedin\.com\/in\/[\w-]+/i.test(url)) { toast.error('Please enter a valid LinkedIn profile URL (e.g. linkedin.com/in/username)'); return; }
     toast.loading('Importing from LinkedIn...', { id: 'linkedin' });
     try {
       const res = await aiApi.importLinkedIn({ linkedinUrl: url });
@@ -505,7 +505,7 @@ export default function CardEditor({ card, onChange }: CardEditorProps) {
 
       {/* Save Button - Sticky */}
       <div className="sticky bottom-4 z-10">
-        <Button onClick={handleSave} isLoading={saving} className="w-full shadow-xl shadow-brand-500/10">
+        <Button onClick={handleSave} isLoading={saving} disabled={saving} className="w-full shadow-xl shadow-brand-500/10">
           <Save className="w-4 h-4 mr-2" />
           Save Card
         </Button>

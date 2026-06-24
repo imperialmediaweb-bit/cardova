@@ -130,7 +130,7 @@ export default function Navbar() {
                 <Link
                   to="/register"
                   onClick={() => setMobileOpen(false)}
-                  className="block px-3 py-2.5 text-sm text-brand-400 hover:text-brand-300 font-medium rounded-lg hover:bg-zinc-800 transition-colors"
+                  className="btn-primary text-sm block text-center"
                 >
                   Get your card
                 </Link>

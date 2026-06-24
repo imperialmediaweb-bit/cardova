@@ -181,7 +181,7 @@ export default function PublicCard() {
       bio: 'text-white/80',
       iconBg: 'bg-white/10 hover:bg-white/20 text-white/90',
       contactBtn: 'bg-white hover:bg-white/90 text-zinc-900',
-      badge: 'text-white/30',
+      badge: 'text-white/50',
       actionBtn: 'text-white/50 hover:text-white/80 bg-white/10 hover:bg-white/20',
       sectionTitle: 'text-white/90',
       sectionBg: 'bg-white/5',
@@ -211,7 +211,7 @@ export default function PublicCard() {
       bio: 'text-white/80',
       iconBg: 'bg-white/10 hover:bg-white/20 text-white/90',
       contactBtn: 'bg-white hover:bg-white/90 text-zinc-900',
-      badge: 'text-white/30',
+      badge: 'text-white/50',
       actionBtn: 'text-white/50 hover:text-white/80 bg-white/10 hover:bg-white/20',
       sectionTitle: 'text-white/90',
       sectionBg: 'bg-white/5',
@@ -226,7 +226,7 @@ export default function PublicCard() {
       bio: 'text-white/80',
       iconBg: 'bg-white/10 hover:bg-white/20 text-white/90',
       contactBtn: 'bg-white hover:bg-white/90 text-zinc-900',
-      badge: 'text-white/30',
+      badge: 'text-white/50',
       actionBtn: 'text-white/50 hover:text-white/80 bg-white/10 hover:bg-white/20',
       sectionTitle: 'text-white/90',
       sectionBg: 'bg-white/5',
@@ -451,10 +451,10 @@ export default function PublicCard() {
               <div className={`mt-6 rounded-xl p-5 ${t.sectionBg} border ${t.sectionBorder}`}>
                 <h3 className={`text-sm font-semibold mb-3 ${t.sectionTitle}`}>Get in Touch</h3>
                 <form onSubmit={async (e) => { e.preventDefault(); setLeadSending(true); try { await leadsApi.submitLead(username!, leadForm); setLeadSent(true); toast.success('Message sent!'); } catch { toast.error('Failed to send. Try again.'); } finally { setLeadSending(false); } }} className="space-y-2">
-                  <input value={leadForm.name} onChange={(e) => setLeadForm({...leadForm, name: e.target.value})} placeholder="Your name" required className="w-full px-3 py-2 bg-black/20 border border-white/10 rounded-lg text-sm text-white placeholder-white/40 focus:outline-none focus:ring-1 focus:ring-white/30" />
-                  <input value={leadForm.email} onChange={(e) => setLeadForm({...leadForm, email: e.target.value})} type="email" placeholder="Your email" required className="w-full px-3 py-2 bg-black/20 border border-white/10 rounded-lg text-sm text-white placeholder-white/40 focus:outline-none focus:ring-1 focus:ring-white/30" />
-                  <input value={leadForm.phone || ''} onChange={(e) => setLeadForm({...leadForm, phone: e.target.value})} type="tel" placeholder="Phone (optional)" className="w-full px-3 py-2 bg-black/20 border border-white/10 rounded-lg text-sm text-white placeholder-white/40 focus:outline-none focus:ring-1 focus:ring-white/30" />
-                  <textarea value={leadForm.message} onChange={(e) => setLeadForm({...leadForm, message: e.target.value})} placeholder="Message (optional)" rows={2} className="w-full px-3 py-2 bg-black/20 border border-white/10 rounded-lg text-sm text-white placeholder-white/40 focus:outline-none focus:ring-1 focus:ring-white/30 resize-none" />
+                  <input value={leadForm.name} onChange={(e) => setLeadForm({...leadForm, name: e.target.value})} placeholder="Your name" aria-label="Your name" required className="w-full px-3 py-2 bg-black/20 border border-white/10 rounded-lg text-sm text-white placeholder-white/40 focus:outline-none focus:ring-1 focus:ring-white/30" />
+                  <input value={leadForm.email} onChange={(e) => setLeadForm({...leadForm, email: e.target.value})} type="email" placeholder="Your email" aria-label="Your email" required className="w-full px-3 py-2 bg-black/20 border border-white/10 rounded-lg text-sm text-white placeholder-white/40 focus:outline-none focus:ring-1 focus:ring-white/30" />
+                  <input value={leadForm.phone || ''} onChange={(e) => setLeadForm({...leadForm, phone: e.target.value})} type="tel" placeholder="Phone (optional)" aria-label="Phone (optional)" className="w-full px-3 py-2 bg-black/20 border border-white/10 rounded-lg text-sm text-white placeholder-white/40 focus:outline-none focus:ring-1 focus:ring-white/30" />
+                  <textarea value={leadForm.message} onChange={(e) => setLeadForm({...leadForm, message: e.target.value})} placeholder="Message (optional)" aria-label="Message (optional)" rows={2} className="w-full px-3 py-2 bg-black/20 border border-white/10 rounded-lg text-sm text-white placeholder-white/40 focus:outline-none focus:ring-1 focus:ring-white/30 resize-none" />
                   <button type="submit" disabled={leadSending} className={`w-full py-2.5 rounded-lg text-sm font-medium transition-colors ${t.contactBtn} disabled:opacity-50`}>
                     {leadSending ? 'Sending...' : 'Send Message'}
                   </button>
@@ -464,6 +464,12 @@ export default function PublicCard() {
             {card.leadFormEnabled && leadSent && (
               <div className={`mt-6 rounded-xl p-5 text-center ${t.sectionBg} border ${t.sectionBorder}`}>
                 <p className={`text-sm ${t.sectionTitle}`}>Thanks! Message sent successfully.</p>
+                <button
+                  onClick={() => { setLeadSent(false); setLeadForm({ name: '', email: '', phone: '', message: '' }); }}
+                  className={`mt-3 text-xs underline ${t.sectionTitle}`}
+                >
+                  Send another message
+                </button>
               </div>
             )}
 

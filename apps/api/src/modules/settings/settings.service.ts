@@ -19,8 +19,10 @@ export class SettingsService {
 
     const emailChanged = data.email && data.email !== user.email;
     let verifyToken: string | undefined;
+    let verifyTokenExpiry: Date | undefined;
     if (emailChanged) {
       verifyToken = crypto.randomBytes(32).toString('hex');
+      verifyTokenExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000);
     }
 
     const updated = await prisma.user.update({
@@ -28,7 +30,7 @@ export class SettingsService {
       data: {
         ...(data.name !== undefined && { name: data.name }),
         ...(data.email !== undefined && { email: data.email }),
-        ...(emailChanged && { emailVerified: false, verifyToken }),
+        ...(emailChanged && { emailVerified: false, verifyToken, verifyTokenExpiry }),
       },
       select: {
         id: true,
@@ -41,7 +43,11 @@ export class SettingsService {
     });
 
     if (emailChanged && verifyToken) {
-      sendVerificationEmail(updated.email, verifyToken).catch(() => {});
+      // Invalidate all sessions on email change for security
+      await prisma.refreshToken.deleteMany({ where: { userId } });
+      sendVerificationEmail(updated.email, verifyToken).catch((err) =>
+        console.error('Verification email failed:', err.message),
+      );
     }
 
     return { ...updated, createdAt: updated.createdAt.toISOString() };
