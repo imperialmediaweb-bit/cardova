@@ -25,7 +25,10 @@ const envSchema = z.object({
   EMAIL_FROM: z.string().default('noreply@cardova.app'),
   CLIENT_URL: z.string().default('http://localhost:5173'),
   PORT: z.coerce.number().default(3000),
-  NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
+  NODE_ENV: z.preprocess(
+    (val) => (val === '' || val === undefined ? 'production' : val),
+    z.enum(['development', 'production', 'test']),
+  ),
 });
 
 export type Env = z.infer<typeof envSchema>;
