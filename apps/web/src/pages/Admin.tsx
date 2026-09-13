@@ -148,10 +148,13 @@ export default function Admin() {
                           <p className="text-xs text-zinc-500">{u.email}</p>
                         </td>
                         <td className="px-6 py-4">
-                          {u.card ? (
+                          {u.cards?.length ? (
                             <div>
-                              <span className="text-sm text-zinc-300">@{u.card.username}</span>
-                              <span className="ml-2 text-xs text-zinc-600">{u.card.cardType}</span>
+                              <span className="text-sm text-zinc-300">@{u.cards[0].username}</span>
+                              <span className="ml-2 text-xs text-zinc-600">{u.cards[0].cardType}</span>
+                              {u.cards.length > 1 && (
+                                <span className="ml-2 text-xs text-zinc-500">+{u.cards.length - 1} more</span>
+                              )}
                             </div>
                           ) : (
                             <span className="text-xs text-zinc-600">No card</span>

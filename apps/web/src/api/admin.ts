@@ -25,7 +25,7 @@ export interface AdminUser {
   emailVerified: boolean;
   aiCreditsUsed: number;
   createdAt: string;
-  card: { username: string; cardType: string } | null;
+  cards: { username: string; cardType: string }[];
 }
 
 export interface UsersResponse {
