@@ -12,10 +12,10 @@ export interface Lead {
 }
 
 export const leadsApi = {
-  getLeads: (page?: number) =>
-    client.get<{ success: boolean; data: { leads: Lead[]; total: number; unread: number; pages: number; page: number } }>('/leads', { params: { page } }),
-  getStats: () =>
-    client.get<{ success: boolean; data: { total: number; unread: number; last30: number } }>('/leads/stats'),
+  getLeads: (page?: number, cardId?: string) =>
+    client.get<{ success: boolean; data: { leads: Lead[]; total: number; unread: number; pages: number; page: number } }>('/leads', { params: { page, cardId } }),
+  getStats: (cardId?: string) =>
+    client.get<{ success: boolean; data: { total: number; unread: number; last30: number } }>('/leads/stats', { params: { cardId } }),
   markRead: (leadId: string) =>
     client.put<{ success: boolean }>(`/leads/${leadId}/read`),
   markAllRead: () =>

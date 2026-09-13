@@ -92,7 +92,7 @@ export default function CardEditor({ card, onChange }: CardEditorProps) {
   const handleSave = async () => {
     setSaving(true);
     try {
-      const res = await cardApi.updateCard({
+      const res = await cardApi.updateCard(form.id, {
         username: form.username,
         displayName: form.displayName,
         title: form.title,
@@ -255,6 +255,7 @@ export default function CardEditor({ card, onChange }: CardEditorProps) {
       {/* Profile Section */}
       <Section icon={User} title="Profile" subtitle="Avatar, name, and details" defaultOpen={true}>
         <AvatarUpload
+          cardId={form.id}
           avatarUrl={form.avatarUrl}
           onUpload={(url) => updateField('avatarUrl', url)}
         />
@@ -356,6 +357,7 @@ export default function CardEditor({ card, onChange }: CardEditorProps) {
 
           <Section icon={Image} title="Gallery" subtitle={`${(form.gallery || []).length} images`} defaultOpen={false}>
             <GalleryEditor
+              cardId={form.id}
               value={form.gallery || []}
               onChange={(gallery) => updateField('gallery', gallery)}
             />

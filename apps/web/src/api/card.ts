@@ -64,34 +64,43 @@ export interface CardData {
 }
 
 export const cardApi = {
-  getCard: () => client.get<{ success: boolean; data: CardData }>('/card'),
+  listCards: () => client.get<{ success: boolean; data: CardData[] }>('/card'),
 
-  updateCard: (data: Partial<CardData>) =>
-    client.put<{ success: boolean; data: CardData }>('/card', data),
+  createCard: (displayName?: string) =>
+    client.post<{ success: boolean; data: CardData }>('/card', { displayName }),
 
-  uploadAvatar: (file: File) => {
+  getCard: (cardId: string) =>
+    client.get<{ success: boolean; data: CardData }>(`/card/${cardId}`),
+
+  updateCard: (cardId: string, data: Partial<CardData>) =>
+    client.put<{ success: boolean; data: CardData }>(`/card/${cardId}`, data),
+
+  deleteCard: (cardId: string) =>
+    client.delete<{ success: boolean }>(`/card/${cardId}`),
+
+  uploadAvatar: (cardId: string, file: File) => {
     const formData = new FormData();
     formData.append('avatar', file);
     return client.post<{ success: boolean; data: { avatarUrl: string } }>(
-      '/card/upload-avatar',
+      `/card/${cardId}/upload-avatar`,
       formData,
       { headers: { 'Content-Type': 'multipart/form-data' } },
     );
   },
 
-  uploadGalleryImage: (file: File) => {
+  uploadGalleryImage: (cardId: string, file: File) => {
     const formData = new FormData();
     formData.append('image', file);
     return client.post<{ success: boolean; data: { url: string } }>(
-      '/card/upload-gallery',
+      `/card/${cardId}/upload-gallery`,
       formData,
       { headers: { 'Content-Type': 'multipart/form-data' } },
     );
   },
 
-  getQRCode: () =>
-    client.get('/card/qr', { responseType: 'blob' }),
+  getQRCode: (cardId: string) =>
+    client.get(`/card/${cardId}/qr`, { responseType: 'blob' }),
 
-  getVCF: () =>
-    client.get('/card/vcf', { responseType: 'blob' }),
+  getVCF: (cardId: string) =>
+    client.get(`/card/${cardId}/vcf`, { responseType: 'blob' }),
 };

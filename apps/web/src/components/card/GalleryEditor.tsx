@@ -5,11 +5,12 @@ import type { GalleryItem } from '../../api/card';
 import toast from 'react-hot-toast';
 
 interface GalleryEditorProps {
+  cardId: string;
   value: GalleryItem[];
   onChange: (gallery: GalleryItem[]) => void;
 }
 
-export default function GalleryEditor({ value, onChange }: GalleryEditorProps) {
+export default function GalleryEditor({ cardId, value, onChange }: GalleryEditorProps) {
   const [uploading, setUploading] = useState(false);
   const [editCaption, setEditCaption] = useState<string | null>(null);
   const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000';
@@ -30,7 +31,7 @@ export default function GalleryEditor({ value, onChange }: GalleryEditorProps) {
 
     setUploading(true);
     try {
-      const res = await cardApi.uploadGalleryImage(file);
+      const res = await cardApi.uploadGalleryImage(cardId, file);
       const newItem: GalleryItem = {
         id: crypto.randomUUID(),
         url: res.data.data.url,

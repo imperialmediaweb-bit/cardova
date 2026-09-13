@@ -20,13 +20,13 @@ export class TeamService {
     const user = await prisma.user.findUnique({ where: { id: userId }, include: { ownedTeam: true } });
     if (!user) throw new AppError('User not found', 404);
 
-    const team = user.ownedTeam || (user.teamId ? await prisma.team.findUnique({ where: { id: user.teamId }, include: { members: { select: { id: true, name: true, email: true, card: { select: { username: true } } } }, owner: { select: { id: true, name: true, email: true } } } }) : null);
+    const team = user.ownedTeam || (user.teamId ? await prisma.team.findUnique({ where: { id: user.teamId }, include: { members: { select: { id: true, name: true, email: true, cards: { select: { username: true } } } }, owner: { select: { id: true, name: true, email: true } } } }) : null);
     if (!team) return null;
 
     const teamWithMembers = await prisma.team.findUnique({
       where: { id: team.id },
       include: {
-        members: { select: { id: true, name: true, email: true, card: { select: { username: true } } } },
+        members: { select: { id: true, name: true, email: true, cards: { select: { username: true } } } },
         owner: { select: { id: true, name: true, email: true } },
       },
     });

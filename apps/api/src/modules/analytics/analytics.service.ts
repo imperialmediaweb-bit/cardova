@@ -2,8 +2,10 @@ import { prisma } from '../../config/prisma';
 import { AppError } from '../../middleware/errorHandler';
 
 export class AnalyticsService {
-  static async getViews(userId: string) {
-    const card = await prisma.card.findUnique({ where: { userId } });
+  static async getViews(userId: string, cardId?: string) {
+    const card = cardId
+      ? await prisma.card.findFirst({ where: { id: cardId, userId } })
+      : await prisma.card.findFirst({ where: { userId }, orderBy: { createdAt: 'asc' } });
     if (!card) throw new AppError('Card not found', 404);
 
     const thirtyDaysAgo = new Date();

@@ -7,6 +7,8 @@ export interface AnalyticsData {
 }
 
 export const analyticsApi = {
-  getViews: () =>
-    client.get<{ success: boolean; data: AnalyticsData }>('/analytics/views'),
+  getViews: (cardId?: string) =>
+    client.get<{ success: boolean; data: AnalyticsData }>('/analytics/views', {
+      params: { cardId },
+    }),
 };

@@ -20,11 +20,17 @@ const router = Router();
 
 router.use(asyncHandler(authMiddleware));
 
-router.get('/', asyncHandler(CardController.getCard));
-router.put('/', asyncHandler(CardController.updateCard));
-router.post('/upload-avatar', upload.single('avatar'), asyncHandler(CardController.uploadAvatar));
-router.post('/upload-gallery', upload.single('image'), asyncHandler(CardController.uploadGalleryImage));
-router.get('/qr', asyncHandler(CardController.getQR));
-router.get('/vcf', asyncHandler(CardController.getVCF));
+// Collection routes
+router.get('/', asyncHandler(CardController.listCards));
+router.post('/', asyncHandler(CardController.createCard));
+
+// Per-card routes
+router.get('/:cardId', asyncHandler(CardController.getCard));
+router.put('/:cardId', asyncHandler(CardController.updateCard));
+router.delete('/:cardId', asyncHandler(CardController.deleteCard));
+router.post('/:cardId/upload-avatar', upload.single('avatar'), asyncHandler(CardController.uploadAvatar));
+router.post('/:cardId/upload-gallery', upload.single('image'), asyncHandler(CardController.uploadGalleryImage));
+router.get('/:cardId/qr', asyncHandler(CardController.getQR));
+router.get('/:cardId/vcf', asyncHandler(CardController.getVCF));
 
 export { router as cardRouter };

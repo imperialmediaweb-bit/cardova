@@ -23,7 +23,7 @@ model User {
   stripeCustomerId String?
   createdAt        DateTime  @default(now())
   updatedAt        DateTime  @updatedAt
-  card             Card?
+  cards            Card[]
   payments         Payment[]
   refreshTokens    RefreshToken[]
   teamId           String?
@@ -42,7 +42,7 @@ model RefreshToken {
 
 model Card {
   id            String   @id @default(cuid())
-  userId        String   @unique
+  userId        String
   user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   username      String   @unique
   displayName   String
@@ -68,6 +68,8 @@ model Card {
   updatedAt     DateTime @updatedAt
   views         CardView[]
   leads         Lead[]
+
+  @@index([userId])
 }
 
 model CardView {

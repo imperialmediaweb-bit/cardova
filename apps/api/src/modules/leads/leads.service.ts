@@ -2,6 +2,15 @@ import { prisma } from '../../config/prisma';
 import { AppError } from '../../middleware/errorHandler';
 
 export class LeadsService {
+  /** Resolves the target card, defaulting to the user's first card. */
+  private static async resolveCard(userId: string, cardId?: string) {
+    const card = cardId
+      ? await prisma.card.findFirst({ where: { id: cardId, userId } })
+      : await prisma.card.findFirst({ where: { userId }, orderBy: { createdAt: 'asc' } });
+    if (!card) throw new AppError('Card not found', 404);
+    return card;
+  }
+
   // Submit lead (public - no auth needed)
   static async submitLead(username: string, data: { name: string; email: string; phone?: string; message?: string }) {
     const card = await prisma.card.findUnique({ where: { username } });
@@ -24,9 +33,8 @@ export class LeadsService {
   }
 
   // Get leads for authenticated user
-  static async getLeads(userId: string, page: number = 1, limit: number = 20) {
-    const card = await prisma.card.findUnique({ where: { userId } });
-    if (!card) throw new AppError('Card not found', 404);
+  static async getLeads(userId: string, page: number = 1, limit: number = 20, cardId?: string) {
+    const card = await this.resolveCard(userId, cardId);
     const [leads, total] = await Promise.all([
       prisma.lead.findMany({ where: { cardId: card.id }, orderBy: { createdAt: 'desc' }, skip: (page - 1) * limit, take: limit }),
       prisma.lead.count({ where: { cardId: card.id } }),
@@ -36,26 +44,23 @@ export class LeadsService {
   }
 
   // Mark lead as read
-  static async markRead(userId: string, leadId: string) {
-    const card = await prisma.card.findUnique({ where: { userId } });
-    if (!card) throw new AppError('Card not found', 404);
+  static async markRead(userId: string, leadId: string, cardId?: string) {
+    const card = await this.resolveCard(userId, cardId);
     const lead = await prisma.lead.findFirst({ where: { id: leadId, cardId: card.id } });
     if (!lead) throw new AppError('Lead not found', 404);
     return prisma.lead.update({ where: { id: leadId }, data: { isRead: true } });
   }
 
   // Mark all as read
-  static async markAllRead(userId: string) {
-    const card = await prisma.card.findUnique({ where: { userId } });
-    if (!card) throw new AppError('Card not found', 404);
+  static async markAllRead(userId: string, cardId?: string) {
+    const card = await this.resolveCard(userId, cardId);
     await prisma.lead.updateMany({ where: { cardId: card.id, isRead: false }, data: { isRead: true } });
     return { message: 'All leads marked as read' };
   }
 
   // Delete lead
-  static async deleteLead(userId: string, leadId: string) {
-    const card = await prisma.card.findUnique({ where: { userId } });
-    if (!card) throw new AppError('Card not found', 404);
+  static async deleteLead(userId: string, leadId: string, cardId?: string) {
+    const card = await this.resolveCard(userId, cardId);
     const lead = await prisma.lead.findFirst({ where: { id: leadId, cardId: card.id } });
     if (!lead) throw new AppError('Lead not found', 404);
     await prisma.lead.delete({ where: { id: leadId } });
@@ -63,9 +68,8 @@ export class LeadsService {
   }
 
   // Get lead stats
-  static async getStats(userId: string) {
-    const card = await prisma.card.findUnique({ where: { userId } });
-    if (!card) throw new AppError('Card not found', 404);
+  static async getStats(userId: string, cardId?: string) {
+    const card = await this.resolveCard(userId, cardId);
     const total = await prisma.lead.count({ where: { cardId: card.id } });
     const unread = await prisma.lead.count({ where: { cardId: card.id, isRead: false } });
     const thirtyDaysAgo = new Date();

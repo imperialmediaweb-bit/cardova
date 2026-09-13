@@ -1,8 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
-import { useQuery } from '@tanstack/react-query';
-import { LayoutDashboard, BarChart3, Crown, ExternalLink, Copy, Check, Eye, TrendingUp, Globe, Share2, QrCode, Download, Sparkles, ArrowRight, X } from 'lucide-react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { LayoutDashboard, BarChart3, Crown, ExternalLink, Copy, Check, Eye, TrendingUp, Globe, Share2, QrCode, Download, Sparkles, ArrowRight, X, Plus, Trash2, CreditCard } from 'lucide-react';
 import Navbar from '../components/layout/Navbar';
 import CardEditor from '../components/card/CardEditor';
 import CardPreview from '../components/card/CardPreview';
@@ -17,28 +17,46 @@ import toast from 'react-hot-toast';
 
 export default function Dashboard() {
   const [searchParams] = useSearchParams();
+  const queryClient = useQueryClient();
   const { user } = useAuthStore();
   const [activeTab, setActiveTab] = useState<'editor' | 'analytics'>('editor');
+  const [activeCardId, setActiveCardId] = useState<string | null>(null);
   const [cardForm, setCardForm] = useState<CardData | null>(null);
   const [copied, setCopied] = useState(false);
   const [downloading, setDownloading] = useState<string | null>(null);
   const [showWelcome, setShowWelcome] = useState(true);
+  const [creatingCard, setCreatingCard] = useState(false);
+  const [deletingCardId, setDeletingCardId] = useState<string | null>(null);
 
-  const { data: cardData, isLoading: cardLoading, error: cardError } = useQuery({
-    queryKey: ['card'],
-    queryFn: () => cardApi.getCard().then((res) => res.data.data),
+  const { data: cards, isLoading: cardsLoading, error: cardsError } = useQuery({
+    queryKey: ['cards'],
+    queryFn: () => cardApi.listCards().then((res) => res.data.data),
   });
 
   const { data: analyticsData, isLoading: analyticsLoading } = useQuery({
-    queryKey: ['analytics'],
-    queryFn: () => analyticsApi.getViews().then((res) => res.data.data),
+    queryKey: ['analytics', activeCardId],
+    queryFn: () => analyticsApi.getViews(activeCardId ?? undefined).then((res) => res.data.data),
   });
 
+  // Pick the first card once cards load, and recover if the active card disappears.
   useEffect(() => {
-    if (cardData && !cardForm) {
-      setCardForm(cardData);
+    if (!cards?.length) return;
+    if (!activeCardId || !cards.some((c) => c.id === activeCardId)) {
+      setActiveCardId(cards[0].id);
     }
-  }, [cardData, cardForm]);
+  }, [cards, activeCardId]);
+
+  const activeCard = cards?.find((c) => c.id === activeCardId) ?? cards?.[0];
+
+  // Load the active card into the editor form whenever the selection changes,
+  // without clobbering unsaved edits when the cards list refetches.
+  const loadedCardIdRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (activeCard && loadedCardIdRef.current !== activeCard.id) {
+      loadedCardIdRef.current = activeCard.id;
+      setCardForm(activeCard);
+    }
+  }, [activeCard]);
 
   useEffect(() => {
     if (searchParams.get('upgraded') === 'true') {
@@ -53,6 +71,39 @@ export default function Dashboard() {
       window.location.href = res.data.data.url;
     } catch (err: any) {
       toast.error(err.response?.data?.message || 'Failed to start checkout');
+    }
+  };
+
+  const handleCreateCard = async () => {
+    setCreatingCard(true);
+    try {
+      const res = await cardApi.createCard();
+      const created = res.data.data;
+      await queryClient.invalidateQueries({ queryKey: ['cards'] });
+      setActiveCardId(created.id);
+      toast.success('New card created!');
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || 'Failed to create card');
+    } finally {
+      setCreatingCard(false);
+    }
+  };
+
+  const handleDeleteCard = async (cardId: string) => {
+    if (!window.confirm('Delete this card? This cannot be undone.')) return;
+    setDeletingCardId(cardId);
+    try {
+      await cardApi.deleteCard(cardId);
+      const remaining = (cards || []).filter((c) => c.id !== cardId);
+      await queryClient.invalidateQueries({ queryKey: ['cards'] });
+      if (activeCardId === cardId) {
+        setActiveCardId(remaining[0]?.id ?? null);
+      }
+      toast.success('Card deleted');
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || 'Failed to delete card');
+    } finally {
+      setDeletingCardId(null);
     }
   };
 
@@ -76,9 +127,10 @@ export default function Dashboard() {
   };
 
   const handleDownloadQR = async () => {
+    if (!activeCard) return;
     setDownloading('qr');
     try {
-      const res = await cardApi.getQRCode();
+      const res = await cardApi.getQRCode(activeCard.id);
       const url = URL.createObjectURL(res.data);
       const a = document.createElement('a');
       a.href = url;
@@ -93,9 +145,10 @@ export default function Dashboard() {
   };
 
   const handleDownloadVCF = async () => {
+    if (!activeCard) return;
     setDownloading('vcf');
     try {
-      const res = await cardApi.getVCF();
+      const res = await cardApi.getVCF(activeCard.id);
       const url = URL.createObjectURL(res.data);
       const a = document.createElement('a');
       a.href = url;
@@ -109,7 +162,7 @@ export default function Dashboard() {
     }
   };
 
-  if (cardLoading) {
+  if (cardsLoading) {
     return (
       <>
         <Navbar />
@@ -120,13 +173,13 @@ export default function Dashboard() {
     );
   }
 
-  if (cardError) {
+  if (cardsError) {
     return (
       <>
         <Navbar />
         <div className="flex items-center justify-center min-h-[calc(100vh-4rem)] px-4">
           <div className="text-center">
-            <p className="text-zinc-400 mb-4">Failed to load your card. Please try again.</p>
+            <p className="text-zinc-400 mb-4">Failed to load your cards. Please try again.</p>
             <Button onClick={() => window.location.reload()}>Reload</Button>
           </div>
         </div>
@@ -134,9 +187,35 @@ export default function Dashboard() {
     );
   }
 
-  const displayCard = cardForm || cardData;
+  const displayCard = cardForm && cardForm.id === activeCard?.id ? cardForm : activeCard;
   const viewsTotal = analyticsData?.total || 0;
   const viewsLast30 = analyticsData?.views?.reduce((sum: number, v: any) => sum + v.count, 0) || 0;
+  const cardLimit = user?.isPro ? 10 : 1;
+  const cardCount = cards?.length || 0;
+  const canCreateMore = cardCount < cardLimit;
+  const showSwitcher = cardCount > 1 || canCreateMore;
+
+  if (cards && cardCount === 0) {
+    return (
+      <>
+        <Helmet><title>Dashboard — Cardova</title></Helmet>
+        <Navbar />
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+          <div className="bg-zinc-900/50 border border-zinc-800 rounded-2xl p-12 text-center">
+            <CreditCard className="w-10 h-10 text-zinc-700 mx-auto mb-4" />
+            <h3 className="text-lg font-semibold text-zinc-300 mb-2">No cards yet</h3>
+            <p className="text-sm text-zinc-500 mb-6 max-w-sm mx-auto">
+              Create your first card to start sharing your profile.
+            </p>
+            <Button onClick={handleCreateCard} isLoading={creatingCard} size="sm">
+              <Plus className="w-4 h-4 mr-2" />
+              New Card
+            </Button>
+          </div>
+        </div>
+      </>
+    );
+  }
 
   return (
     <>
@@ -144,6 +223,67 @@ export default function Dashboard() {
       <Navbar />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-8">
+        {/* Card Switcher */}
+        {cards && showSwitcher && (
+          <div className="flex items-center gap-3 mb-5">
+            <div className="flex-1 min-w-0 flex items-center gap-2 overflow-x-auto pb-1">
+              {cards.map((card) => {
+                const isActive = card.id === activeCard?.id;
+                const label =
+                  (isActive ? displayCard?.displayName : card.displayName) ||
+                  card.username ||
+                  'Untitled card';
+                return (
+                  <div
+                    key={card.id}
+                    className={`group flex items-center gap-1 flex-shrink-0 pl-3 pr-1.5 py-1.5 rounded-xl border transition-all ${
+                      isActive
+                        ? 'bg-brand-500/10 border-brand-500/50'
+                        : 'bg-zinc-900 border-zinc-800 hover:border-zinc-700'
+                    }`}
+                  >
+                    <button
+                      type="button"
+                      onClick={() => setActiveCardId(card.id)}
+                      className={`flex items-center gap-2 min-w-0 py-1 text-sm font-medium transition-colors ${
+                        isActive ? 'text-brand-300' : 'text-zinc-400 hover:text-zinc-200'
+                      }`}
+                      title={label}
+                    >
+                      <CreditCard className="w-3.5 h-3.5 flex-shrink-0 opacity-70" />
+                      <span className="truncate max-w-[9rem]">{label}</span>
+                    </button>
+                    {cardCount > 1 && (
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteCard(card.id)}
+                        disabled={deletingCardId === card.id}
+                        className="p-1 rounded-lg text-zinc-600 opacity-0 group-hover:opacity-100 focus:opacity-100 hover:text-red-400 hover:bg-red-500/10 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                        title="Delete card"
+                      >
+                        <Trash2 className={`w-3.5 h-3.5 ${deletingCardId === card.id ? 'animate-pulse' : ''}`} />
+                      </button>
+                    )}
+                  </div>
+                );
+              })}
+
+              <button
+                type="button"
+                onClick={handleCreateCard}
+                disabled={creatingCard}
+                className="flex items-center gap-1.5 flex-shrink-0 px-3 py-2.5 rounded-xl border border-dashed border-zinc-700 text-sm font-medium text-zinc-400 hover:border-brand-500/50 hover:text-brand-300 hover:bg-brand-500/5 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <Plus className={`w-3.5 h-3.5 ${creatingCard ? 'animate-pulse' : ''}`} />
+                New Card
+              </button>
+            </div>
+            <span className="hidden sm:block flex-shrink-0 text-xs text-zinc-600">
+              {cardCount}/{cardLimit} cards
+            </span>
+          </div>
+        )}
+
         {/* Top Bar: Card link + Quick Actions */}
         {displayCard && (
           <div className="mb-6 lg:mb-8">
@@ -315,6 +455,7 @@ export default function Dashboard() {
             <div className="lg:col-span-3">
               <div className="bg-zinc-900/50 border border-zinc-800 rounded-2xl p-5 lg:p-6">
                 <CardEditor
+                  key={displayCard.id}
                   card={displayCard}
                   onChange={(updated) => setCardForm(updated)}
                 />

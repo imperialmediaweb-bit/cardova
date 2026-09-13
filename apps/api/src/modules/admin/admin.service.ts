@@ -67,7 +67,7 @@ export class AdminService {
           emailVerified: true,
           aiCreditsUsed: true,
           createdAt: true,
-          card: {
+          cards: {
             select: { username: true, cardType: true },
           },
         },
@@ -99,7 +99,7 @@ export class AdminService {
         aiCreditsUsed: true,
         stripeCustomerId: true,
         createdAt: true,
-        card: true,
+        cards: true,
         payments: {
           orderBy: { createdAt: 'desc' },
           take: 10,

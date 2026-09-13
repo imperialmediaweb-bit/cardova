@@ -4,11 +4,12 @@ import { cardApi } from '../../api/card';
 import toast from 'react-hot-toast';
 
 interface AvatarUploadProps {
+  cardId: string;
   avatarUrl: string | null;
   onUpload: (url: string) => void;
 }
 
-export default function AvatarUpload({ avatarUrl, onUpload }: AvatarUploadProps) {
+export default function AvatarUpload({ cardId, avatarUrl, onUpload }: AvatarUploadProps) {
   const [uploading, setUploading] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
@@ -28,7 +29,7 @@ export default function AvatarUpload({ avatarUrl, onUpload }: AvatarUploadProps)
 
     setUploading(true);
     try {
-      const res = await cardApi.uploadAvatar(file);
+      const res = await cardApi.uploadAvatar(cardId, file);
       onUpload(res.data.data.avatarUrl);
       toast.success('Avatar uploaded');
     } catch (err: any) {

@@ -19,27 +19,32 @@ export class LeadsController {
 
   static async getLeads(req: Request, res: Response) {
     const page = parseInt(req.query.page as string) || 1;
-    const result = await LeadsService.getLeads(req.user!.userId, page);
+    const cardId = req.query.cardId as string | undefined;
+    const result = await LeadsService.getLeads(req.user!.userId, page, 20, cardId);
     res.json({ success: true, data: result });
   }
 
   static async markRead(req: Request, res: Response) {
-    const result = await LeadsService.markRead(req.user!.userId, req.params.leadId);
+    const cardId = req.query.cardId as string | undefined;
+    const result = await LeadsService.markRead(req.user!.userId, req.params.leadId, cardId);
     res.json({ success: true, data: result });
   }
 
   static async markAllRead(req: Request, res: Response) {
-    const result = await LeadsService.markAllRead(req.user!.userId);
+    const cardId = req.query.cardId as string | undefined;
+    const result = await LeadsService.markAllRead(req.user!.userId, cardId);
     res.json({ success: true, data: result });
   }
 
   static async deleteLead(req: Request, res: Response) {
-    const result = await LeadsService.deleteLead(req.user!.userId, req.params.leadId);
+    const cardId = req.query.cardId as string | undefined;
+    const result = await LeadsService.deleteLead(req.user!.userId, req.params.leadId, cardId);
     res.json({ success: true, data: result });
   }
 
   static async getStats(req: Request, res: Response) {
-    const result = await LeadsService.getStats(req.user!.userId);
+    const cardId = req.query.cardId as string | undefined;
+    const result = await LeadsService.getStats(req.user!.userId, cardId);
     res.json({ success: true, data: result });
   }
 }

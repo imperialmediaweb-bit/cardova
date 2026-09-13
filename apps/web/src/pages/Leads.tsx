@@ -1,25 +1,40 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Mail, Phone, MessageSquare, Trash2, CheckCheck, Eye, Users, Calendar } from 'lucide-react';
+import { Mail, Phone, MessageSquare, Trash2, CheckCheck, Eye, Users, Calendar, CreditCard } from 'lucide-react';
 import Navbar from '../components/layout/Navbar';
 import Spinner from '../components/ui/Spinner';
 import Button from '../components/ui/Button';
 import { leadsApi, Lead } from '../api/leads';
+import { cardApi } from '../api/card';
 import toast from 'react-hot-toast';
 
 export default function Leads() {
   const queryClient = useQueryClient();
   const [page, setPage] = useState(1);
+  const [cardId, setCardId] = useState<string | null>(null);
+
+  const { data: cards } = useQuery({
+    queryKey: ['cards'],
+    queryFn: () => cardApi.listCards().then((r) => r.data.data),
+  });
+
+  // Default to the first card once the list loads.
+  useEffect(() => {
+    if (!cards?.length) return;
+    if (!cardId || !cards.some((c) => c.id === cardId)) {
+      setCardId(cards[0].id);
+    }
+  }, [cards, cardId]);
 
   const { data: statsData } = useQuery({
-    queryKey: ['lead-stats'],
-    queryFn: () => leadsApi.getStats().then((r) => r.data.data),
+    queryKey: ['lead-stats', cardId],
+    queryFn: () => leadsApi.getStats(cardId ?? undefined).then((r) => r.data.data),
   });
 
   const { data: leadsData, isLoading } = useQuery({
-    queryKey: ['leads', page],
-    queryFn: () => leadsApi.getLeads(page).then((r) => r.data.data),
+    queryKey: ['leads', page, cardId],
+    queryFn: () => leadsApi.getLeads(page, cardId ?? undefined).then((r) => r.data.data),
   });
 
   const markReadMutation = useMutation({
@@ -54,6 +69,32 @@ export default function Leads() {
             </Button>
           )}
         </div>
+
+        {/* Card Selector */}
+        {cards && cards.length > 1 && (
+          <div className="flex items-center gap-2 overflow-x-auto pb-1 mb-6">
+            {cards.map((card) => {
+              const isActive = card.id === cardId;
+              const label = card.displayName || card.username || 'Untitled card';
+              return (
+                <button
+                  key={card.id}
+                  type="button"
+                  onClick={() => { setCardId(card.id); setPage(1); }}
+                  className={`flex items-center gap-2 flex-shrink-0 px-3 py-2 rounded-xl border text-sm font-medium transition-all ${
+                    isActive
+                      ? 'bg-brand-500/10 border-brand-500/50 text-brand-300'
+                      : 'bg-zinc-900 border-zinc-800 text-zinc-400 hover:border-zinc-700 hover:text-zinc-200'
+                  }`}
+                  title={label}
+                >
+                  <CreditCard className="w-3.5 h-3.5 flex-shrink-0 opacity-70" />
+                  <span className="truncate max-w-[9rem]">{label}</span>
+                </button>
+              );
+            })}
+          </div>
+        )}
 
         {/* Stats */}
         {statsData && (
