@@ -38,17 +38,17 @@ export default function Leads() {
   });
 
   const markReadMutation = useMutation({
-    mutationFn: (leadId: string) => leadsApi.markRead(leadId),
+    mutationFn: (leadId: string) => leadsApi.markRead(leadId, cardId ?? undefined),
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['leads'] }); queryClient.invalidateQueries({ queryKey: ['lead-stats'] }); },
   });
 
   const markAllMutation = useMutation({
-    mutationFn: () => leadsApi.markAllRead(),
+    mutationFn: () => leadsApi.markAllRead(cardId ?? undefined),
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['leads'] }); queryClient.invalidateQueries({ queryKey: ['lead-stats'] }); toast.success('All marked as read'); },
   });
 
   const deleteMutation = useMutation({
-    mutationFn: (leadId: string) => leadsApi.deleteLead(leadId),
+    mutationFn: (leadId: string) => leadsApi.deleteLead(leadId, cardId ?? undefined),
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['leads'] }); queryClient.invalidateQueries({ queryKey: ['lead-stats'] }); toast.success('Lead deleted'); },
   });
 
