@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-const RESERVED_USERNAMES = ['api', 'admin', 'login', 'register', 'dashboard', 'settings', 'billing', 'help', 'support', 'about', 'terms', 'privacy', 'verify-email', 'reset-password', 'forgot-password'];
+export const RESERVED_USERNAMES = ['api', 'admin', 'login', 'register', 'dashboard', 'settings', 'billing', 'leads', 'directory', 'uploads', 'help', 'support', 'about', 'terms', 'privacy', 'verify-email', 'reset-password', 'forgot-password'];
 
 const serviceSchema = z.object({
   id: z.string(),
@@ -58,10 +58,12 @@ export const updateCardSchema = z.object({
   customLinks: z.array(customLinkSchema).max(20).optional(),
   businessHours: z.array(businessHourSchema).max(7).optional(),
   gallery: z.array(galleryItemSchema).max(20).optional(),
-  webhookUrl: z.string().url().regex(/^https:\/\//, 'Webhook URL must use HTTPS').max(500).optional().or(z.literal('')),
+  // Both are nullable: the editor sends the card back as stored, and unset
+  // values are null in the database.
+  webhookUrl: z.string().url().regex(/^https:\/\//, 'Webhook URL must use HTTPS').max(500).or(z.literal('')).nullable().optional(),
   webhookEvents: z.array(z.enum(['view.created', 'lead.created', 'card.updated'])).optional(),
   leadFormEnabled: z.boolean().optional(),
-  customDomain: z.string().max(200).optional(),
+  customDomain: z.string().max(200).nullable().optional(),
 });
 
 export type UpdateCardInput = z.infer<typeof updateCardSchema>;
