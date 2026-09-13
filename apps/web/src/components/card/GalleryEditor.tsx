@@ -13,7 +13,7 @@ interface GalleryEditorProps {
 export default function GalleryEditor({ cardId, value, onChange }: GalleryEditorProps) {
   const [uploading, setUploading] = useState(false);
   const [editCaption, setEditCaption] = useState<string | null>(null);
-  const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+  const apiUrl = import.meta.env.VITE_API_URL || '';
 
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];

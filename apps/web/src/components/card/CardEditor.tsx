@@ -20,6 +20,8 @@ import toast from 'react-hot-toast';
 interface CardEditorProps {
   card: CardData;
   onChange: (card: CardData) => void;
+  /** Fired with the fields the server has actually persisted (save, avatar upload). */
+  onSaved?: (saved: Partial<CardData> & { id: string }) => void;
 }
 
 function Section({
@@ -71,7 +73,7 @@ function Section({
   );
 }
 
-export default function CardEditor({ card, onChange }: CardEditorProps) {
+export default function CardEditor({ card, onChange, onSaved }: CardEditorProps) {
   const { user } = useAuthStore();
   const [saving, setSaving] = useState(false);
   const [improving, setImproving] = useState(false);
@@ -113,6 +115,7 @@ export default function CardEditor({ card, onChange }: CardEditorProps) {
         customDomain: form.customDomain,
       });
       onChange(res.data.data);
+      onSaved?.(res.data.data);
       toast.success('Card saved!');
     } catch (err: any) {
       toast.error(err.response?.data?.message || 'Failed to save card');
@@ -257,7 +260,11 @@ export default function CardEditor({ card, onChange }: CardEditorProps) {
         <AvatarUpload
           cardId={form.id}
           avatarUrl={form.avatarUrl}
-          onUpload={(url) => updateField('avatarUrl', url)}
+          onUpload={(url) => {
+            updateField('avatarUrl', url);
+            // The upload is persisted immediately, so keep the cached card list in sync.
+            onSaved?.({ id: form.id, avatarUrl: url });
+          }}
         />
         <Input
           label="Username"

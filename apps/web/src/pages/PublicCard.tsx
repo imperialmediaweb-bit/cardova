@@ -10,7 +10,7 @@ import { publicApi, PublicCardData } from '../api/public';
 import { leadsApi } from '../api/leads';
 import type { ServiceItem, CustomLink, BusinessHour, GalleryItem } from '../api/card';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+const API_URL = import.meta.env.VITE_API_URL || '';
 
 const socialIcons = [
   { key: 'twitter', icon: Twitter, label: 'Twitter' },

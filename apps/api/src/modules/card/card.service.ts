@@ -1,6 +1,6 @@
 import { prisma } from '../../config/prisma';
 import { AppError } from '../../middleware/errorHandler';
-import { UpdateCardInput } from './card.schema';
+import { RESERVED_USERNAMES, UpdateCardInput } from './card.schema';
 
 /** Card limits per plan. Free users get 1 card, Pro users get up to 10. */
 const FREE_CARD_LIMIT = 1;
@@ -8,28 +8,38 @@ const PRO_CARD_LIMIT = 10;
 
 const PRO_THEMES = ['neon', 'sunset', 'ocean'];
 
+/** Leaves room for a "-NNN" suffix while staying under the 30-char username limit. */
+const MAX_SLUG_LENGTH = 24;
+
 /**
  * Generates a URL-safe, globally unique username by slugifying the base name
- * and appending a numeric suffix until no collision remains.
+ * and appending a numeric suffix until no collision remains. The result always
+ * satisfies updateCardSchema (3–30 chars, not reserved) so later saves succeed.
  */
 async function generateUniqueUsername(base: string): Promise<string> {
-  const slug =
-    base
-      .toLowerCase()
-      .replace(/[^a-z0-9]/g, '-')
-      .replace(/-+/g, '-')
-      .replace(/^-|-$/g, '') || 'user';
+  let slug = base
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '')
+    .slice(0, MAX_SLUG_LENGTH)
+    .replace(/-$/, '');
+
+  // Too-short slugs ("jo") would fail the 3-char minimum on save.
+  if (slug.length < 3) slug = slug ? `${slug}-card` : 'user';
 
   let suffix = 0;
   // Bounded loop: practically resolves within a few iterations.
   while (suffix < 1000) {
     const candidate = suffix === 0 ? slug : `${slug}-${suffix}`;
-    const existing = await prisma.card.findUnique({ where: { username: candidate } });
-    if (!existing) return candidate;
+    const taken =
+      RESERVED_USERNAMES.includes(candidate) ||
+      (await prisma.card.findUnique({ where: { username: candidate } }));
+    if (!taken) return candidate;
     suffix++;
   }
   // Extremely unlikely fallback — guarantees uniqueness via timestamp.
-  return `${slug}-${Date.now()}`;
+  return `${slug.slice(0, 16)}-${Date.now()}`;
 }
 
 export class CardService {

@@ -40,7 +40,7 @@ export default function AvatarUpload({ cardId, avatarUrl, onUpload }: AvatarUplo
     }
   };
 
-  const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+  const apiUrl = import.meta.env.VITE_API_URL || '';
   const displayUrl = avatarUrl
     ? avatarUrl.startsWith('http')
       ? avatarUrl

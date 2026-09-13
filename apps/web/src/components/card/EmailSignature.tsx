@@ -13,7 +13,7 @@ export default function EmailSignature({ card }: EmailSignatureProps) {
 
   const generateHTML = () => {
     const cardUrl = `https://cardova.net/${card.username}`;
-    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+    const apiUrl = import.meta.env.VITE_API_URL || '';
     const avatarSrc = card.avatarUrl ? (card.avatarUrl.startsWith('http') ? card.avatarUrl : `${apiUrl}${card.avatarUrl}`) : '';
 
     return `<table cellpadding="0" cellspacing="0" border="0" style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;font-size:14px;color:#333;">

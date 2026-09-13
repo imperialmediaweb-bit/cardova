@@ -40,16 +40,19 @@ export default function Leads() {
   const markReadMutation = useMutation({
     mutationFn: (leadId: string) => leadsApi.markRead(leadId, cardId ?? undefined),
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['leads'] }); queryClient.invalidateQueries({ queryKey: ['lead-stats'] }); },
+    onError: (err: any) => toast.error(err.response?.data?.message || 'Failed to mark lead as read'),
   });
 
   const markAllMutation = useMutation({
     mutationFn: () => leadsApi.markAllRead(cardId ?? undefined),
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['leads'] }); queryClient.invalidateQueries({ queryKey: ['lead-stats'] }); toast.success('All marked as read'); },
+    onError: (err: any) => toast.error(err.response?.data?.message || 'Failed to mark leads as read'),
   });
 
   const deleteMutation = useMutation({
     mutationFn: (leadId: string) => leadsApi.deleteLead(leadId, cardId ?? undefined),
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['leads'] }); queryClient.invalidateQueries({ queryKey: ['lead-stats'] }); toast.success('Lead deleted'); },
+    onError: (err: any) => toast.error(err.response?.data?.message || 'Failed to delete lead'),
   });
 
   return (

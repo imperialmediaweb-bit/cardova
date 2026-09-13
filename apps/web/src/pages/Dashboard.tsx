@@ -36,6 +36,8 @@ export default function Dashboard() {
   const { data: analyticsData, isLoading: analyticsLoading } = useQuery({
     queryKey: ['analytics', activeCardId],
     queryFn: () => analyticsApi.getViews(activeCardId ?? undefined).then((res) => res.data.data),
+    // Wait for a card to be selected; a brand-new account has none yet and would 404.
+    enabled: !!activeCardId,
   });
 
   // Pick the first card once cards load, and recover if the active card disappears.
@@ -74,10 +76,20 @@ export default function Dashboard() {
     }
   };
 
+  // Keep the cached card list in step with what the server has persisted, so
+  // switching away and back never reloads pre-save data into the editor.
+  const handleCardSaved = (saved: Partial<CardData> & { id: string }) => {
+    queryClient.setQueryData<CardData[]>(['cards'], (old) =>
+      old?.map((c) => (c.id === saved.id ? { ...c, ...saved } : c)),
+    );
+  };
+
   const handleCreateCard = async () => {
+    const name = window.prompt('Name for the new card (e.g. your name or business):', '');
+    if (name === null) return;
     setCreatingCard(true);
     try {
-      const res = await cardApi.createCard();
+      const res = await cardApi.createCard(name.trim() || `Card ${(cards?.length || 0) + 1}`);
       const created = res.data.data;
       await queryClient.invalidateQueries({ queryKey: ['cards'] });
       setActiveCardId(created.id);
@@ -193,7 +205,6 @@ export default function Dashboard() {
   const cardLimit = user?.isPro ? 10 : 1;
   const cardCount = cards?.length || 0;
   const canCreateMore = cardCount < cardLimit;
-  const showSwitcher = cardCount > 1 || canCreateMore;
 
   if (cards && cardCount === 0) {
     return (
@@ -224,7 +235,7 @@ export default function Dashboard() {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-8">
         {/* Card Switcher */}
-        {cards && showSwitcher && (
+        {cards && cardCount > 0 && (
           <div className="flex items-center gap-3 mb-5">
             <div className="flex-1 min-w-0 flex items-center gap-2 overflow-x-auto pb-1">
               {cards.map((card) => {
@@ -268,15 +279,34 @@ export default function Dashboard() {
                 );
               })}
 
-              <button
-                type="button"
-                onClick={handleCreateCard}
-                disabled={creatingCard}
-                className="flex items-center gap-1.5 flex-shrink-0 px-3 py-2.5 rounded-xl border border-dashed border-zinc-700 text-sm font-medium text-zinc-400 hover:border-brand-500/50 hover:text-brand-300 hover:bg-brand-500/5 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <Plus className={`w-3.5 h-3.5 ${creatingCard ? 'animate-pulse' : ''}`} />
-                New Card
-              </button>
+              {canCreateMore ? (
+                <button
+                  type="button"
+                  onClick={handleCreateCard}
+                  disabled={creatingCard}
+                  className="flex items-center gap-1.5 flex-shrink-0 px-3 py-2.5 rounded-xl border border-dashed border-zinc-700 text-sm font-medium text-zinc-400 hover:border-brand-500/50 hover:text-brand-300 hover:bg-brand-500/5 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <Plus className={`w-3.5 h-3.5 ${creatingCard ? 'animate-pulse' : ''}`} />
+                  New Card
+                </button>
+              ) : user?.isPro ? (
+                <span
+                  className="flex items-center gap-1.5 flex-shrink-0 px-3 py-2.5 rounded-xl border border-dashed border-zinc-800 text-sm font-medium text-zinc-600 cursor-not-allowed"
+                  title={`You've reached the maximum of ${cardLimit} cards`}
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  Limit reached
+                </span>
+              ) : (
+                <Link
+                  to="/billing"
+                  className="flex items-center gap-1.5 flex-shrink-0 px-3 py-2.5 rounded-xl border border-dashed border-brand-500/40 text-sm font-medium text-brand-300 hover:bg-brand-500/10 transition-all"
+                  title="Pro accounts can create up to 10 cards"
+                >
+                  <Crown className="w-3.5 h-3.5" />
+                  Upgrade for more cards
+                </Link>
+              )}
             </div>
             <span className="hidden sm:block flex-shrink-0 text-xs text-zinc-600">
               {cardCount}/{cardLimit} cards
@@ -458,6 +488,7 @@ export default function Dashboard() {
                   key={displayCard.id}
                   card={displayCard}
                   onChange={(updated) => setCardForm(updated)}
+                  onSaved={handleCardSaved}
                 />
               </div>
             </div>
