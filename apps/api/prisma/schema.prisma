@@ -67,9 +67,11 @@ model Card {
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
   views         CardView[]
+  clicks        CardClick[]
   leads         Lead[]
 
   @@index([userId])
+  @@index([customDomain])
 }
 
 model CardView {
@@ -77,7 +79,21 @@ model CardView {
   cardId   String
   card     Card     @relation(fields: [cardId], references: [id], onDelete: Cascade)
   referrer String   @default("")
+  /// How the visitor arrived: direct | qr | nfc | domain
+  source   String   @default("direct")
   viewedAt DateTime @default(now())
+
+  @@index([cardId])
+}
+
+/// A tap on a link/button of the public card (social icon, custom link, call, save contact...).
+model CardClick {
+  id        String   @id @default(cuid())
+  cardId    String
+  card      Card     @relation(fields: [cardId], references: [id], onDelete: Cascade)
+  linkType  String
+  target    String   @default("")
+  clickedAt DateTime @default(now())
 
   @@index([cardId])
 }

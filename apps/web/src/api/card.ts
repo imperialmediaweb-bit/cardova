@@ -78,6 +78,20 @@ export const cardApi = {
   deleteCard: (cardId: string) =>
     client.delete<{ success: boolean }>(`/card/${cardId}`),
 
+  verifyDomain: (cardId: string) =>
+    client.post<{
+      success: boolean;
+      data: {
+        customDomain: string | null;
+        domainVerified: boolean;
+        verified: boolean;
+        method: 'cname' | 'a' | null;
+        detail: string;
+        target: string;
+        message: string;
+      };
+    }>(`/card/${cardId}/verify-domain`),
+
   uploadAvatar: (cardId: string, file: File) => {
     const formData = new FormData();
     formData.append('avatar', file);

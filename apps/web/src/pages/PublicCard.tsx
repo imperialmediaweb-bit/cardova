@@ -1,12 +1,12 @@
 import { useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, useSearchParams, Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { useQuery } from '@tanstack/react-query';
 import { Download, Share2, Twitter, Linkedin, Github, Instagram, Globe, Mail, Phone, MapPin, Clock, ExternalLink, Briefcase, Code, Palette, Camera, Wrench, Heart, BookOpen, ShoppingBag, Link as LinkIcon, Calendar, FileText, Map, Star, Menu } from 'lucide-react';
 import toast from 'react-hot-toast';
 import Spinner from '../components/ui/Spinner';
 import Button from '../components/ui/Button';
-import { publicApi, PublicCardData } from '../api/public';
+import { publicApi, ClickType } from '../api/public';
 import { leadsApi } from '../api/leads';
 import type { ServiceItem, CustomLink, BusinessHour, GalleryItem } from '../api/card';
 
@@ -44,23 +44,39 @@ function getImageUrl(url: string) {
   return `${API_URL}${url}`;
 }
 
-export default function PublicCard() {
-  const { username } = useParams<{ username: string }>();
+interface PublicCardProps {
+  /** When set, the card is resolved by this verified custom domain instead of the URL username. */
+  domain?: string;
+}
+
+export default function PublicCard({ domain }: PublicCardProps) {
+  const params = useParams<{ username: string }>();
+  const [searchParams] = useSearchParams();
+  // "?src=qr" is embedded in generated QR codes so scans can be told apart from direct visits.
+  const src = searchParams.get('src');
 
   const [leadForm, setLeadForm] = useState({ name: '', email: '', phone: '', message: '' });
   const [leadSending, setLeadSending] = useState(false);
   const [leadSent, setLeadSent] = useState(false);
 
   const { data: card, isLoading, error } = useQuery({
-    queryKey: ['public-card', username],
-    queryFn: () => publicApi.getCard(username!).then((res) => res.data.data),
-    enabled: !!username,
+    queryKey: domain ? ['public-card-domain', domain] : ['public-card', params.username, src],
+    queryFn: () =>
+      (domain ? publicApi.getCardByDomain(domain) : publicApi.getCard(params.username!, src)).then((res) => res.data.data),
+    enabled: !!(domain || params.username),
     retry: false,
   });
+
+  // Clicks are attributed to the card's username, whichever host it was opened on.
+  const username = card?.username ?? params.username;
+  const track = (type: ClickType, target = '') => {
+    if (username) publicApi.trackClick(username, type, target);
+  };
 
   const handleDownloadVCF = async () => {
     try {
       if (!card) return;
+      track('vcard');
 
       const lines = [
         'BEGIN:VCARD',
@@ -89,7 +105,8 @@ export default function PublicCard() {
   };
 
   const handleShare = async () => {
-    const url = `https://cardova.net/${username}`;
+    track('share');
+    const url = card?.customDomain ? `https://${card.customDomain}` : `https://cardova.net/${username}`;
     if (navigator.share) {
       try {
         await navigator.share({ title: card?.displayName, url });
@@ -304,6 +321,7 @@ export default function PublicCard() {
                         target={key !== 'email' && key !== 'phone' ? '_blank' : undefined}
                         rel="noopener noreferrer"
                         title={label}
+                        onClick={() => track(key, value)}
                         className={`w-11 h-11 rounded-full flex items-center justify-center transition-colors ${t.iconBg}`}
                       >
                         <Icon className="w-5 h-5" />
@@ -317,6 +335,7 @@ export default function PublicCard() {
               {(card.socialLinks?.email || card.socialLinks?.phone) && (
                 <a
                   href={card.socialLinks.phone ? `tel:${card.socialLinks.phone}` : `mailto:${card.socialLinks.email}`}
+                  onClick={() => track('contact', card.socialLinks.phone ? 'phone' : 'email')}
                   className={`mt-6 w-full inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-semibold text-sm transition-colors ${t.contactBtn}`}
                 >
                   {card.socialLinks.phone ? <Phone className="w-4 h-4" /> : <Mail className="w-4 h-4" />}
@@ -326,6 +345,7 @@ export default function PublicCard() {
               {card.socialLinks?.phone && card.socialLinks?.email && (
                 <a
                   href={`mailto:${card.socialLinks.email}`}
+                  onClick={() => track('email', card.socialLinks.email)}
                   className={`mt-2 w-full inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl text-sm transition-colors ${t.actionBtn}`}
                 >
                   <Mail className="w-4 h-4" />
@@ -378,6 +398,7 @@ export default function PublicCard() {
                           href={link.url.startsWith('http') ? link.url : `https://${link.url}`}
                           target="_blank"
                           rel="noopener noreferrer"
+                          onClick={() => track('custom_link', link.title)}
                           className={`flex items-center gap-3 px-4 py-3.5 rounded-xl transition-colors ${t.linkBtn}`}
                         >
                           <IconComp className="w-4 h-4 flex-shrink-0" />

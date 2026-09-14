@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { LayoutDashboard, BarChart3, Crown, ExternalLink, Copy, Check, Eye, TrendingUp, Globe, Share2, QrCode, Download, Sparkles, ArrowRight, X, Plus, Trash2, CreditCard } from 'lucide-react';
+import { LayoutDashboard, BarChart3, Crown, ExternalLink, Copy, Check, Eye, TrendingUp, Globe, Share2, QrCode, Download, Sparkles, ArrowRight, X, Plus, Trash2, CreditCard, MousePointerClick } from 'lucide-react';
 import Navbar from '../components/layout/Navbar';
 import CardEditor from '../components/card/CardEditor';
 import CardPreview from '../components/card/CardPreview';
@@ -539,9 +539,97 @@ export default function Dashboard() {
               </div>
             ) : analyticsData && analyticsData.views?.length > 0 ? (
               <>
+                {/* QR scans + link clicks */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div className="p-4 bg-zinc-900/50 border border-zinc-800 rounded-xl">
+                    <div className="flex items-center gap-2 mb-1">
+                      <QrCode className="w-4 h-4 text-brand-400" />
+                      <span className="text-xs text-zinc-500">QR Scans — 30 Days</span>
+                    </div>
+                    <p className="text-xl font-bold text-zinc-100">{analyticsData.qrScans?.last30 ?? 0}</p>
+                    <p className="text-[11px] text-zinc-600 mt-0.5">{analyticsData.qrScans?.total ?? 0} all time</p>
+                  </div>
+                  <div className="p-4 bg-zinc-900/50 border border-zinc-800 rounded-xl">
+                    <div className="flex items-center gap-2 mb-1">
+                      <MousePointerClick className="w-4 h-4 text-green-400" />
+                      <span className="text-xs text-zinc-500">Link Clicks — 30 Days</span>
+                    </div>
+                    <p className="text-xl font-bold text-zinc-100">{analyticsData.clicks?.last30 ?? 0}</p>
+                    <p className="text-[11px] text-zinc-600 mt-0.5">{analyticsData.clicks?.total ?? 0} all time</p>
+                  </div>
+                  <div className="p-4 bg-zinc-900/50 border border-zinc-800 rounded-xl">
+                    <div className="flex items-center gap-2 mb-1">
+                      <TrendingUp className="w-4 h-4 text-amber-400" />
+                      <span className="text-xs text-zinc-500">Click-through Rate</span>
+                    </div>
+                    <p className="text-xl font-bold text-zinc-100">
+                      {viewsLast30 > 0 ? `${Math.round(((analyticsData.clicks?.last30 ?? 0) / viewsLast30) * 100)}%` : '—'}
+                    </p>
+                    <p className="text-[11px] text-zinc-600 mt-0.5">clicks per view, last 30 days</p>
+                  </div>
+                </div>
+
                 <div className="bg-zinc-900/50 border border-zinc-800 rounded-2xl p-5 lg:p-6">
                   <h3 className="text-base font-semibold text-zinc-100 mb-4">Views — Last 30 Days</h3>
                   <ViewsChart data={analyticsData.views} />
+                </div>
+
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  {/* Traffic sources */}
+                  <div className="bg-zinc-900/50 border border-zinc-800 rounded-2xl p-5 lg:p-6">
+                    <h3 className="text-base font-semibold text-zinc-100 mb-1">Traffic Sources</h3>
+                    <p className="text-xs text-zinc-500 mb-4">How visitors reached this card in the last 30 days</p>
+                    {analyticsData.sources?.length ? (
+                      <div className="space-y-1">
+                        {analyticsData.sources.map((s) => {
+                          const pct = viewsLast30 > 0 ? Math.round((s.count / viewsLast30) * 100) : 0;
+                          return (
+                            <div key={s.source} className="py-2.5 px-3 rounded-lg hover:bg-zinc-800/50 transition-colors">
+                              <div className="flex items-center justify-between mb-1.5">
+                                <span className="text-sm text-zinc-300 flex items-center gap-2">
+                                  {s.source === 'qr' && <QrCode className="w-3.5 h-3.5 text-brand-400" />}
+                                  {s.label}
+                                </span>
+                                <span className="text-sm font-medium text-zinc-400">{s.count} <span className="text-zinc-600">({pct}%)</span></span>
+                              </div>
+                              <div className="h-1.5 rounded-full bg-zinc-800 overflow-hidden">
+                                <div className="h-full bg-brand-500/70 rounded-full" style={{ width: `${pct}%` }} />
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    ) : (
+                      <p className="text-sm text-zinc-600 py-4">No visits in the last 30 days.</p>
+                    )}
+                  </div>
+
+                  {/* Link clicks */}
+                  <div className="bg-zinc-900/50 border border-zinc-800 rounded-2xl p-5 lg:p-6">
+                    <h3 className="text-base font-semibold text-zinc-100 mb-1">Link Clicks</h3>
+                    <p className="text-xs text-zinc-500 mb-4">What visitors tapped on your card in the last 30 days</p>
+                    {analyticsData.clicks?.items?.length ? (
+                      <div className="space-y-1">
+                        {analyticsData.clicks.items.map((c, i) => (
+                          <div
+                            key={`${c.type}-${c.target}`}
+                            className="flex items-center justify-between py-2.5 px-3 rounded-lg hover:bg-zinc-800/50 transition-colors"
+                          >
+                            <div className="flex items-center gap-3 min-w-0">
+                              <span className="text-xs text-zinc-600 w-5 flex-shrink-0">{i + 1}.</span>
+                              <div className="min-w-0">
+                                <p className="text-sm text-zinc-300 truncate">{c.label}</p>
+                                {c.target && <p className="text-[11px] text-zinc-600 truncate">{c.target}</p>}
+                              </div>
+                            </div>
+                            <span className="text-sm font-medium text-zinc-400 flex-shrink-0 ml-3">{c.count}</span>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-sm text-zinc-600 py-4">No clicks yet. Clicks on social icons, custom links, Call/Email and Save Contact are counted here.</p>
+                    )}
+                  </div>
                 </div>
                 {analyticsData.topReferrers?.length > 0 && (
                   <div className="bg-zinc-900/50 border border-zinc-800 rounded-2xl p-5 lg:p-6">

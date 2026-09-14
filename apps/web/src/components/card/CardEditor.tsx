@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Save, Sparkles, Wand2, Building2, User, Zap, ChevronDown, ChevronRight, Globe, Image, Clock, Link2, Palette, Users, Wifi, Linkedin, AtSign, Webhook } from 'lucide-react';
+import { Save, Sparkles, Wand2, Building2, User, Zap, ChevronDown, ChevronRight, Globe, Image, Clock, Link2, Palette, Users, Wifi, Linkedin, AtSign, Webhook, CheckCircle2, AlertCircle } from 'lucide-react';
 import Input from '../ui/Input';
 import Button from '../ui/Button';
 import ThemePicker from './ThemePicker';
@@ -77,6 +77,7 @@ export default function CardEditor({ card, onChange, onSaved }: CardEditorProps)
   const { user } = useAuthStore();
   const [saving, setSaving] = useState(false);
   const [improving, setImproving] = useState(false);
+  const [verifyingDomain, setVerifyingDomain] = useState(false);
   const [showAIModal, setShowAIModal] = useState(false);
   const [showAIBusinessModal, setShowAIBusinessModal] = useState(false);
   const [form, setForm] = useState(card);
@@ -121,6 +122,26 @@ export default function CardEditor({ card, onChange, onSaved }: CardEditorProps)
       toast.error(err.response?.data?.message || 'Failed to save card');
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleVerifyDomain = async () => {
+    if (!form.customDomain) return;
+    setVerifyingDomain(true);
+    try {
+      // Persist the domain as typed first, so the check runs against what the user sees.
+      const saved = await cardApi.updateCard(form.id, { customDomain: form.customDomain });
+      onSaved?.({ id: form.id, customDomain: saved.data.data.customDomain, domainVerified: saved.data.data.domainVerified });
+      const res = await cardApi.verifyDomain(form.id);
+      const { verified, message, customDomain } = res.data.data;
+      updateField('domainVerified', verified);
+      if (customDomain && customDomain !== form.customDomain) updateField('customDomain', customDomain);
+      onSaved?.({ id: form.id, domainVerified: verified, customDomain: customDomain ?? form.customDomain });
+      verified ? toast.success(message, { duration: 6000 }) : toast.error(message, { duration: 8000 });
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || 'Could not verify domain');
+    } finally {
+      setVerifyingDomain(false);
     }
   };
 
@@ -413,15 +434,41 @@ export default function CardEditor({ card, onChange, onSaved }: CardEditorProps)
 
         {/* Custom Domain */}
         <div className="space-y-1.5">
-          <label className="block text-sm font-medium text-zinc-300">Custom Domain</label>
-          <input
-            type="text"
-            value={form.customDomain || ''}
-            onChange={(e) => updateField('customDomain', e.target.value || null)}
-            placeholder="cards.yourbusiness.com"
-            className="w-full px-3.5 py-2.5 bg-zinc-900 border border-zinc-700 rounded-lg text-zinc-100 placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent transition-colors text-sm"
-          />
-          <p className="text-[11px] text-zinc-500">Point a CNAME record to cardova.net, then enter your domain here.</p>
+          <div className="flex items-center justify-between">
+            <label className="block text-sm font-medium text-zinc-300">Custom Domain</label>
+            {form.customDomain && (
+              form.domainVerified ? (
+                <span className="flex items-center gap-1 text-[11px] font-medium text-green-400"><CheckCircle2 className="w-3.5 h-3.5" /> Verified</span>
+              ) : (
+                <span className="flex items-center gap-1 text-[11px] font-medium text-amber-400"><AlertCircle className="w-3.5 h-3.5" /> Not verified</span>
+              )
+            )}
+          </div>
+          <div className="flex gap-2">
+            <input
+              type="text"
+              value={form.customDomain || ''}
+              onChange={(e) => updateField('customDomain', e.target.value || null)}
+              placeholder="cards.yourbusiness.com"
+              className="flex-1 min-w-0 px-3.5 py-2.5 bg-zinc-900 border border-zinc-700 rounded-lg text-zinc-100 placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent transition-colors text-sm"
+            />
+            <Button
+              type="button"
+              variant="secondary"
+              size="sm"
+              onClick={handleVerifyDomain}
+              isLoading={verifyingDomain}
+              disabled={!form.customDomain || verifyingDomain}
+              title="Save the domain and check its DNS now"
+            >
+              Verify DNS
+            </Button>
+          </div>
+          <p className="text-[11px] text-zinc-500">
+            Add a <span className="font-mono text-zinc-400">CNAME</span> record for your domain pointing to <span className="font-mono text-zinc-400">cardova.net</span>, then click Verify DNS.
+            Once verified, opening your domain shows this card.
+            {!user?.isPro && <span className="text-brand-400"> Requires Pro.</span>}
+          </p>
         </div>
 
         {/* Webhook URL */}

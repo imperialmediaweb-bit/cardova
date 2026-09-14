@@ -32,5 +32,6 @@ router.post('/:cardId/upload-avatar', upload.single('avatar'), asyncHandler(Card
 router.post('/:cardId/upload-gallery', upload.single('image'), asyncHandler(CardController.uploadGalleryImage));
 router.get('/:cardId/qr', asyncHandler(CardController.getQR));
 router.get('/:cardId/vcf', asyncHandler(CardController.getVCF));
+router.post('/:cardId/verify-domain', asyncHandler(CardController.verifyDomain));
 
 export { router as cardRouter };

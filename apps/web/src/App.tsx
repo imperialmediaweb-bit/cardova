@@ -21,8 +21,26 @@ import AdminRoute from './components/layout/AdminRoute';
 import { useAuthStore } from './stores/authStore';
 import { authApi } from './api/auth';
 
+/**
+ * Hosts the app itself lives on. Any other hostname is a customer's verified
+ * custom domain (CNAME → cardova.net) and renders that customer's card only.
+ */
+function isAppHost(host: string): boolean {
+  const h = host.toLowerCase();
+  if (h === 'localhost' || h === '127.0.0.1' || h === '[::1]') return true;
+  if (h === 'cardova.net' || h === 'www.cardova.net' || h.endsWith('.cardova.net')) return true;
+  if (h.endsWith('.railway.app') || h.endsWith('.up.railway.app')) return true;
+  const extra = (import.meta.env.VITE_APP_HOSTS as string | undefined)?.split(',').map((s) => s.trim().toLowerCase()) ?? [];
+  return extra.includes(h);
+}
+
 function App() {
   const { setAuth, logout } = useAuthStore();
+  const host = window.location.hostname;
+
+  if (!isAppHost(host)) {
+    return <PublicCard domain={host} />;
+  }
 
   useEffect(() => {
     const token = useAuthStore.getState().accessToken;

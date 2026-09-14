@@ -3,6 +3,7 @@ import path from 'path';
 import fs from 'fs';
 import { z } from 'zod';
 import { CardService } from './card.service';
+import { DomainService } from './domain.service';
 import { updateCardSchema } from './card.schema';
 import { generateQR } from '../../utils/qr';
 import { buildVCard } from '../../utils/vcf';
@@ -157,6 +158,11 @@ export class CardController {
     res.set('Content-Type', 'image/png');
     res.set('Content-Disposition', `inline; filename="${card.username}-qr.png"`);
     res.send(qrBuffer);
+  }
+
+  static async verifyDomain(req: Request, res: Response) {
+    const result = await DomainService.verify(req.user!.userId, req.params.cardId);
+    res.json({ success: true, data: result });
   }
 
   static async getVCF(req: Request, res: Response) {

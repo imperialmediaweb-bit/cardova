@@ -1,8 +1,12 @@
 import QRCode from 'qrcode';
 
+/** Public URL encoded in the QR code. `src=qr` lets analytics tell scans apart from direct visits. */
+export function qrTargetUrl(username: string): string {
+  return `https://cardova.net/${username}?src=qr`;
+}
+
 export async function generateQR(username: string): Promise<Buffer> {
-  const url = `https://cardova.net/${username}`;
-  const buffer = await QRCode.toBuffer(url, {
+  const buffer = await QRCode.toBuffer(qrTargetUrl(username), {
     type: 'png',
     width: 400,
     margin: 2,

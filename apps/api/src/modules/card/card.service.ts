@@ -1,6 +1,7 @@
 import { prisma } from '../../config/prisma';
 import { AppError } from '../../middleware/errorHandler';
 import { RESERVED_USERNAMES, UpdateCardInput } from './card.schema';
+import { isValidDomain, normalizeDomain } from './domain.service';
 
 /** Card limits per plan. Free users get 1 card, Pro users get up to 10. */
 const FREE_CARD_LIMIT = 1;
@@ -121,6 +122,16 @@ export class CardService {
       if (existing) throw new AppError('Username already taken', 409);
     }
 
+    // A changed custom domain must be re-verified before it serves the card.
+    let customDomain: string | null | undefined;
+    if (data.customDomain !== undefined) {
+      customDomain = data.customDomain ? normalizeDomain(data.customDomain) : null;
+      if (customDomain && !isValidDomain(customDomain)) {
+        throw new AppError('That does not look like a valid domain name (e.g. cards.yourbusiness.com)', 400);
+      }
+    }
+    const domainChanged = customDomain !== undefined && customDomain !== card.customDomain;
+
     return prisma.card.update({
       where: { id: card.id },
       data: {
@@ -141,7 +152,8 @@ export class CardService {
         ...(data.webhookUrl !== undefined && { webhookUrl: data.webhookUrl || null }),
         ...(data.webhookEvents !== undefined && { webhookEvents: data.webhookEvents }),
         ...(data.leadFormEnabled !== undefined && { leadFormEnabled: data.leadFormEnabled }),
-        ...(data.customDomain !== undefined && { customDomain: data.customDomain || null }),
+        ...(customDomain !== undefined && { customDomain }),
+        ...(domainChanged && { domainVerified: false }),
       },
     });
   }
