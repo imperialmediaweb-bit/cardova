@@ -188,7 +188,8 @@ export default function CardEditor({ card, onChange, onSaved }: CardEditorProps)
     }
     try {
       const ndef = new (window as any).NDEFReader();
-      await ndef.write({ records: [{ recordType: 'url', data: `https://cardova.net/${form.username}` }] });
+      // src=nfc lets Analytics count taps separately from direct visits.
+      await ndef.write({ records: [{ recordType: 'url', data: `https://cardova.net/${form.username}?src=nfc` }] });
       toast.success('Card URL written to NFC tag!');
     } catch (err: any) {
       if (err.name === 'NotAllowedError') toast.error('NFC permission denied');

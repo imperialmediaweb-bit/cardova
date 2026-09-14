@@ -5,6 +5,7 @@ const SOURCE_LABELS: Record<string, string> = {
   direct: 'Direct / Link',
   qr: 'QR Code',
   nfc: 'NFC Tap',
+  email: 'Email Signature',
   domain: 'Custom Domain',
 };
 

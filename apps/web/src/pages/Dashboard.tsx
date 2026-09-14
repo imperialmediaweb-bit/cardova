@@ -578,7 +578,7 @@ export default function Dashboard() {
                   {/* Traffic sources */}
                   <div className="bg-zinc-900/50 border border-zinc-800 rounded-2xl p-5 lg:p-6">
                     <h3 className="text-base font-semibold text-zinc-100 mb-1">Traffic Sources</h3>
-                    <p className="text-xs text-zinc-500 mb-4">How visitors reached this card in the last 30 days</p>
+                    <p className="text-xs text-zinc-500 mb-4">How visitors reached this card in the last 30 days — QR codes, NFC tags and email signatures are tagged automatically</p>
                     {analyticsData.sources?.length ? (
                       <div className="space-y-1">
                         {analyticsData.sources.map((s) => {

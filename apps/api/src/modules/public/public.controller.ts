@@ -5,7 +5,7 @@ import { prisma } from '../../config/prisma';
 import { AppError } from '../../middleware/errorHandler';
 
 /** Known traffic sources; anything else is recorded as "direct". */
-const VIEW_SOURCES = ['direct', 'qr', 'nfc', 'domain'] as const;
+const VIEW_SOURCES = ['direct', 'qr', 'nfc', 'email', 'domain'] as const;
 type ViewSource = (typeof VIEW_SOURCES)[number];
 
 export const CLICK_TYPES = [

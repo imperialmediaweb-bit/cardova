@@ -79,7 +79,7 @@ model CardView {
   cardId   String
   card     Card     @relation(fields: [cardId], references: [id], onDelete: Cascade)
   referrer String   @default("")
-  /// How the visitor arrived: direct | qr | nfc | domain
+  /// How the visitor arrived: direct | qr | nfc | email | domain
   source   String   @default("direct")
   viewedAt DateTime @default(now())
 

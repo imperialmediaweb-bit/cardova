@@ -12,7 +12,8 @@ export default function EmailSignature({ card }: EmailSignatureProps) {
   const [copied, setCopied] = useState(false);
 
   const generateHTML = () => {
-    const cardUrl = `https://cardova.net/${card.username}`;
+    // src=email attributes visits from the signature in Analytics.
+    const cardUrl = `https://cardova.net/${card.username}?src=email`;
     const apiUrl = import.meta.env.VITE_API_URL || '';
     const avatarSrc = card.avatarUrl ? (card.avatarUrl.startsWith('http') ? card.avatarUrl : `${apiUrl}${card.avatarUrl}`) : '';
 
