@@ -29,7 +29,7 @@ function isAppHost(host: string): boolean {
   const h = host.toLowerCase();
   if (h === 'localhost' || h === '127.0.0.1' || h === '[::1]') return true;
   if (h === 'cardova.net' || h === 'www.cardova.net' || h.endsWith('.cardova.net')) return true;
-  if (h.endsWith('.railway.app') || h.endsWith('.up.railway.app')) return true;
+  if (h.endsWith('.railway.app')) return true;
   const extra = (import.meta.env.VITE_APP_HOSTS as string | undefined)?.split(',').map((s) => s.trim().toLowerCase()) ?? [];
   return extra.includes(h);
 }
@@ -37,12 +37,11 @@ function isAppHost(host: string): boolean {
 function App() {
   const { setAuth, logout } = useAuthStore();
   const host = window.location.hostname;
+  const customHost = !isAppHost(host);
 
-  if (!isAppHost(host)) {
-    return <PublicCard domain={host} />;
-  }
-
+  // Hooks stay unconditional; the custom-host branch only affects what is rendered.
   useEffect(() => {
+    if (customHost) return;
     const token = useAuthStore.getState().accessToken;
     if (token) {
       authApi.getMe()
@@ -53,7 +52,11 @@ function App() {
           logout();
         });
     }
-  }, [setAuth, logout]);
+  }, [setAuth, logout, customHost]);
+
+  if (customHost) {
+    return <PublicCard domain={host} />;
+  }
 
   return (
     <Routes>

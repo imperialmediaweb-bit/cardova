@@ -34,8 +34,11 @@ export class AnalyticsService {
       : await prisma.card.findFirst({ where: { userId }, orderBy: { createdAt: 'asc' } });
     if (!card) throw new AppError('Card not found', 404);
 
+    // Window = the 30 UTC calendar days ending today, matching the zero-filled series below
+    // (so no view can land on a day that is missing from the chart).
     const thirtyDaysAgo = new Date();
-    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    thirtyDaysAgo.setUTCDate(thirtyDaysAgo.getUTCDate() - 29);
+    thirtyDaysAgo.setUTCHours(0, 0, 0, 0);
 
     const [views, clicks, total, qrScansTotal, clicksTotal] = await Promise.all([
       prisma.cardView.findMany({
@@ -53,8 +56,8 @@ export class AnalyticsService {
     // Views per day (last 30 days, zero-filled)
     const viewsByDayMap = new Map<string, number>();
     for (let i = 0; i < 30; i++) {
-      const date = new Date();
-      date.setDate(date.getDate() - (29 - i));
+      const date = new Date(thirtyDaysAgo);
+      date.setUTCDate(date.getUTCDate() + i);
       viewsByDayMap.set(dayKey(date), 0);
     }
     views.forEach((view) => {

@@ -15,10 +15,22 @@ export function isValidDomain(domain: string): boolean {
   return DOMAIN_RE.test(domain) && domain !== CUSTOM_DOMAIN_TARGET && !domain.endsWith(`.${CUSTOM_DOMAIN_TARGET}`);
 }
 
+/** Resolver answers that definitively mean "no such record" (vs. a transient failure). */
+const DEFINITIVE_DNS_ERRORS = new Set(['ENOTFOUND', 'ENODATA', 'NXDOMAIN', 'ENOTIMP']);
+
+/** Thrown when the resolver itself failed, so the caller must not change the stored status. */
+export class DnsUnavailableError extends Error {}
+
+function isTransient(err: unknown): boolean {
+  const code = (err as { code?: string })?.code ?? '';
+  return !DEFINITIVE_DNS_ERRORS.has(code);
+}
+
 async function resolveA(host: string): Promise<string[]> {
   try {
     return await dns.resolve4(host);
-  } catch {
+  } catch (err) {
+    if (isTransient(err)) throw new DnsUnavailableError(`A lookup failed for ${host}`);
     return [];
   }
 }
@@ -26,13 +38,15 @@ async function resolveA(host: string): Promise<string[]> {
 /**
  * Checks that the domain points at us: either a CNAME to the target host, or
  * A records identical to the target's (some DNS providers flatten CNAMEs at the apex).
+ * Throws DnsUnavailableError on resolver failures so a live domain is never un-verified by a timeout.
  */
 export async function checkDomainDns(domain: string): Promise<{ ok: boolean; method: 'cname' | 'a' | null; detail: string }> {
   let cnames: string[] = [];
   try {
     cnames = (await dns.resolveCname(domain)).map((c) => c.toLowerCase().replace(/\.$/, ''));
-  } catch {
-    // No CNAME — fall through to the A-record comparison.
+  } catch (err) {
+    // No CNAME is a normal answer — fall through to the A-record comparison. Anything else is transient.
+    if (isTransient(err)) throw new DnsUnavailableError(`CNAME lookup failed for ${domain}`);
   }
   if (cnames.some((c) => c === CUSTOM_DOMAIN_TARGET || c.endsWith(`.${CUSTOM_DOMAIN_TARGET}`))) {
     return { ok: true, method: 'cname', detail: `CNAME → ${cnames.join(', ')}` };
@@ -57,14 +71,28 @@ export class DomainService {
     const domain = normalizeDomain(card.customDomain);
     if (!isValidDomain(domain)) throw new AppError('That does not look like a valid domain name', 400);
 
-    // One domain can only ever point at one card.
+    // One domain can only ever point at one card — apex and www are the same domain for lookups.
+    const bare = domain.replace(/^www\./, '');
     const clash = await prisma.card.findFirst({
-      where: { customDomain: domain, domainVerified: true, NOT: { id: card.id } },
+      where: {
+        domainVerified: true,
+        NOT: { id: card.id },
+        OR: [{ customDomain: bare }, { customDomain: `www.${bare}` }],
+      },
       select: { id: true },
     });
     if (clash) throw new AppError('This domain is already connected to another card', 409);
 
-    const dnsResult = await checkDomainDns(domain);
+    let dnsResult: Awaited<ReturnType<typeof checkDomainDns>>;
+    try {
+      dnsResult = await checkDomainDns(domain);
+    } catch (err) {
+      if (err instanceof DnsUnavailableError) {
+        // Keep whatever status the card already has rather than flipping it on a resolver hiccup.
+        throw new AppError('DNS lookup is temporarily unavailable. Please try again in a minute.', 503);
+      }
+      throw err;
+    }
 
     const updated = await prisma.card.update({
       where: { id: card.id },

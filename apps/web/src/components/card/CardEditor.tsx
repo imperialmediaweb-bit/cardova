@@ -134,9 +134,11 @@ export default function CardEditor({ card, onChange, onSaved }: CardEditorProps)
       onSaved?.({ id: form.id, customDomain: saved.data.data.customDomain, domainVerified: saved.data.data.domainVerified });
       const res = await cardApi.verifyDomain(form.id);
       const { verified, message, customDomain } = res.data.data;
-      updateField('domainVerified', verified);
-      if (customDomain && customDomain !== form.customDomain) updateField('customDomain', customDomain);
-      onSaved?.({ id: form.id, domainVerified: verified, customDomain: customDomain ?? form.customDomain });
+      // Apply both fields in one update — two updateField calls would each start from the same stale form.
+      const next = { ...form, domainVerified: verified, customDomain: customDomain ?? form.customDomain };
+      setForm(next);
+      onChange(next);
+      onSaved?.({ id: form.id, domainVerified: verified, customDomain: next.customDomain });
       verified ? toast.success(message, { duration: 6000 }) : toast.error(message, { duration: 8000 });
     } catch (err: any) {
       toast.error(err.response?.data?.message || 'Could not verify domain');

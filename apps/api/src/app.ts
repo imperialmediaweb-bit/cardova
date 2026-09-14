@@ -1,5 +1,6 @@
 import express from 'express';
 import cors from 'cors';
+import { corsOrigin } from './middleware/corsOrigin';
 import helmet from 'helmet';
 import morgan from 'morgan';
 import compression from 'compression';
@@ -28,7 +29,7 @@ app.use(helmet({
   contentSecurityPolicy: env.NODE_ENV === 'production' ? false : undefined,
 }));
 app.use(cors({
-  origin: env.CLIENT_URL,
+  origin: corsOrigin,
   credentials: true,
 }));
 

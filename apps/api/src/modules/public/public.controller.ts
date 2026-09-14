@@ -40,7 +40,8 @@ function serialize(card: PublicCard) {
     businessHours: card.businessHours,
     gallery: card.gallery,
     leadFormEnabled: card.leadFormEnabled,
-    customDomain: card.domainVerified ? card.customDomain : null,
+    // Custom domains are a Pro feature: stop advertising it if the plan lapsed.
+    customDomain: card.domainVerified && card.user.isPro ? card.customDomain : null,
   };
 }
 
@@ -87,6 +88,8 @@ export class PublicController {
       where: {
         domainVerified: true,
         isPublished: true,
+        // Pro-only feature: a lapsed plan stops serving the card on its domain.
+        user: { isPro: true },
         OR: [{ customDomain: host }, { customDomain: `www.${host}` }],
       },
       include: publicInclude,
