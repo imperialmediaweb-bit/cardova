@@ -1,0 +1,91 @@
+import { Request, Response } from 'express';
+import { z } from 'zod';
+import { AIService } from './ai.service';
+
+const generateBioSchema = z.object({
+  jobTitle: z.string().min(1, 'Job title is required').max(100),
+  company: z.string().min(1, 'Company is required').max(100),
+  keywords: z.array(z.string().max(50)).min(1, 'At least one keyword required').max(5),
+  tone: z.enum(['professional', 'friendly', 'creative']).optional().default('professional'),
+  provider: z.enum(['openai', 'claude', 'gemini']).optional().default('openai'),
+});
+
+const improveBioSchema = z.object({
+  bio: z.string().min(1, 'Bio is required').max(1000),
+  provider: z.enum(['openai', 'claude', 'gemini']).optional().default('openai'),
+});
+
+const generateServicesSchema = z.object({
+  businessName: z.string().min(1).max(100),
+  industry: z.string().min(1).max(100),
+  description: z.string().max(500).optional().default(''),
+  provider: z.enum(['openai', 'claude', 'gemini']).optional().default('openai'),
+});
+
+const importLinkedInSchema = z.object({
+  linkedinUrl: z.string().url().min(1),
+  provider: z.enum(['openai', 'claude', 'gemini']).optional().default('openai'),
+});
+
+const generateBusinessContentSchema = z.object({
+  businessName: z.string().min(1).max(100),
+  industry: z.string().min(1).max(100),
+  location: z.string().max(100).optional().default(''),
+  provider: z.enum(['openai', 'claude', 'gemini']).optional().default('openai'),
+});
+
+export class AIController {
+  static async generateBio(req: Request, res: Response) {
+    const data = generateBioSchema.parse(req.body);
+    const result = await AIService.generateBio(
+      req.user!.userId,
+      data.jobTitle,
+      data.company,
+      data.keywords,
+      data.tone,
+      data.provider,
+    );
+    res.json({ success: true, data: result });
+  }
+
+  static async improveBio(req: Request, res: Response) {
+    const data = improveBioSchema.parse(req.body);
+    const result = await AIService.improveBio(req.user!.userId, data.bio, data.provider);
+    res.json({ success: true, data: result });
+  }
+
+  static async generateServices(req: Request, res: Response) {
+    const data = generateServicesSchema.parse(req.body);
+    const result = await AIService.generateServices(
+      req.user!.userId,
+      data.businessName,
+      data.industry,
+      data.description,
+      data.provider,
+    );
+    res.json({ success: true, data: result });
+  }
+
+  static async generateBusinessContent(req: Request, res: Response) {
+    const data = generateBusinessContentSchema.parse(req.body);
+    const result = await AIService.generateBusinessContent(
+      req.user!.userId,
+      data.businessName,
+      data.industry,
+      data.location,
+      data.provider,
+    );
+    res.json({ success: true, data: result });
+  }
+
+  static async importLinkedIn(req: Request, res: Response) {
+    const data = importLinkedInSchema.parse(req.body);
+    const result = await AIService.importFromLinkedIn(req.user!.userId, data.linkedinUrl, data.provider);
+    res.json({ success: true, data: result });
+  }
+
+  static async getProviders(_req: Request, res: Response) {
+    const providers = AIService.getProviders();
+    res.json({ success: true, data: { providers } });
+  }
+}

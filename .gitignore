@@ -1,0 +1,10 @@
+node_modules
+dist
+.env
+.env.local
+*.log
+.DS_Store
+
+# TypeScript build output in source dirs
+apps/web/src/**/*.js
+apps/api/src/**/*.js
